@@ -184,7 +184,7 @@ details.plain > summary { cursor: pointer; color: var(--accent); font-weight: 60
 
 /* Tab bar */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
-.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); height: var(--tabbar-h); }
+.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); height: var(--tabbar-h); }
 .tab { border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 0; }
 .tab svg { width: 24px; height: 24px; }
 .tab[aria-current="page"] { color: var(--accent); }
@@ -254,6 +254,23 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
   #print th, #print td { border-bottom: 1px solid #ccc; padding: 4px; text-align: left; }
   #print .pb { page-break-inside: avoid; }
 }
+
+/* Multi-day calendar */
+.cal { background: var(--card-2); border-radius: 14px; padding: 10px 12px 12px; margin-top: 4px; }
+.cal-h { display: flex; justify-content: space-between; align-items: center; }
+.cal-h .icon-btn { font-size: 24px; }
+.cal-h .icon-btn[disabled] { opacity: 0.3; }
+.cal-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-w span { text-align: center; font-size: 12px; color: var(--muted); font-weight: 600; padding: 2px 0; }
+.cal-d { min-height: 42px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; font-size: 15px; font-weight: 600; padding: 0; font-variant-numeric: tabular-nums; }
+.cal-d[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.cal-d.today { outline: 2px solid var(--text); outline-offset: -2px; }
+.cal-d[disabled] { opacity: 0.35; background: transparent; }
+
+.head-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.head-actions .icon-btn svg { width: 24px; height: 24px; }
+.head-actions .icon-btn[aria-current="page"] { color: var(--accent); }
+.tabbar { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 </style>
 </head>
 <body>
@@ -790,6 +807,16 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
       await this.putMany([rec]);
       return rec;
     },
+    // Several records written in one transaction: all are saved, or none are.
+    async saveMany(kind, items) {
+      const now = new Date().toISOString();
+      const recs = items.map(({ id, data }) => {
+        const prev = this.records.get(id);
+        return { id, kind, data, createdAt: prev ? prev.createdAt : now, updatedAt: now, deleted: false, demo: false, dirty: true };
+      });
+      await this.putMany(recs);
+      return recs;
+    },
     // Deletes become tombstones (content removed) so the deletion syncs to the cloud.
     async remove(id) {
       const prev = this.records.get(id);
@@ -1226,7 +1253,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
   }
 
   function renderTabbar() {
-    const tabs = [['home', 'Overview', ICON.home], ['history', 'History', ICON.history], ['log', 'Log', ICON.plus], ['graphs', 'Graphs', ICON.graph], ['patterns', 'Patterns', ICON.pattern], ['data', 'Data', ICON.data]];
+    const tabs = [['home', 'Overview', ICON.home], ['history', 'History', ICON.history], ['log', 'Log', ICON.plus], ['graphs', 'Graphs', ICON.graph], ['patterns', 'Patterns', ICON.pattern]];
     $('#tabbar').innerHTML = `<div class="tabbar-in">${tabs.map(([id, label, ic]) => id === 'log'
       ? `<button class="tab log" data-act="log" aria-label="Log symptoms"><span class="circle">${ic}</span>Log</button>`
       : `<button class="tab" data-act="tab" data-tab="${id}" ${S.tab === id ? 'aria-current="page"' : ''}>${ic}${label}</button>`).join('')}</div>`;
@@ -1239,6 +1266,9 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     return `<button class="pill ${cls}" data-act="tab" data-tab="data" title="${esc(st.message)}"><span class="dot"></span>${label}</button>`;
   }
 
+  function headActions() {
+    return `<div class="head-actions">${syncPill()}<button class="icon-btn" data-act="tab" data-tab="data" aria-label="Data and backup" ${S.tab === 'data' ? 'aria-current="page"' : ''}>${ICON.data}</button></div>`;
+  }
   function renderBanners() {
     let h = '';
     if (Store.failed) h += `<div class="banner err">Storage on this phone could not be opened: ${esc(Store.failed)}. Entries cannot be saved until this is fixed. Try closing other tabs of this app, or check Safari isn't in Private mode.</div>`;
@@ -1279,7 +1309,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     const lastBackup = Store.meta.lastBackup;
     const needBackup = !Cloud.signedIn() && all.some(r => !r.demo) && (!lastBackup || Date.now() - Date.parse(lastBackup) > 30 * 86400000);
     return `
-      <div class="screen-head"><div><h1>${greet}, ${esc(st.name || 'Estelle')}</h1><p class="small">${esc(weekday(t) + ' ' + C.fmtDay(t, true))}</p></div>${syncPill()}</div>
+      <div class="screen-head"><div><h1>${greet}, ${esc(st.name || 'Estelle')}</h1><p class="small">${esc(weekday(t) + ' ' + C.fmtDay(t, true))}</p></div>${headActions()}</div>
       ${isIOS && !standalone ? `<div class="banner info"><span>Add this app to your Home Screen: tap <b>Share</b>, then <b>Add to Home Screen</b>. Then always open it from that icon. Safari tabs keep their own separate copy of the data.</span></div>` : ''}
       ${needBackup ? `<div class="banner warn"><span>${lastBackup ? 'Your last backup was over a month ago.' : 'Your entries are only on this phone.'} Set up the cloud or save a backup.</span><button class="link-btn" data-act="tab" data-tab="data">Back up</button></div>` : ''}
       <button class="btn btn-primary btn-block btn-big" data-act="log">${ICON.plus.replace('<svg', '<svg width="24" height="24"')} Log symptoms</button>
@@ -1372,7 +1402,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     }
     const kinds = [['all', 'All'], ['entry', 'Symptoms'], ['bleeding', 'Bleeding'], ['med', 'Medication'], ['note', 'Notes']];
     return `
-      <div class="screen-head"><div><h1>History</h1><p class="small">${total} record${total === 1 ? '' : 's'}${q ? ' matching' : ''}</p></div>${syncPill()}</div>
+      <div class="screen-head"><div><h1>History</h1><p class="small">${total} record${total === 1 ? '' : 's'}${q ? ' matching' : ''}</p></div>${headActions()}</div>
       <input class="field" type="search" placeholder="Search symptoms, notes, medication…" value="${esc(H.q)}" data-in="hist-q" aria-label="Search history">
       <div class="chips" style="margin-top:10px">${kinds.map(([k, l]) => `<button class="chip" data-act="hist-kind" data-kind="${k}" aria-pressed="${H.kind === k}">${l}</button>`).join('')}
         <button class="chip" data-act="hist-order">${H.order === 'desc' ? 'Newest first ↓' : 'Oldest first ↑'}</button></div>
@@ -1391,13 +1421,15 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     const base = { date: presetDate || today(), time: presetDate && presetDate !== today() ? '' : nowTime(), symptoms: [], noSymptoms: false, duration: '', notes: '', context: {} };
     const d = rec ? Object.assign(base, JSON.parse(JSON.stringify(rec.data))) : base;
     d.context = d.context || {};
-    F = { id: rec ? rec.id : uuid(), kind: 'entry', d, isNew: !rec, rec, saving: false };
+    F = { id: rec ? rec.id : uuid(), kind: 'entry', d, isNew: !rec, rec, saving: false, multi: new Set([d.date]), multiIds: {}, calMonth: C.monthKey(d.date) };
     const usual = usualKeys();
     const ctx = d.context;
     const body = `
-      <div class="two"><div><label class="f" for="e-date">Date</label><input class="field" type="date" id="e-date" value="${esc(d.date)}" max="${today()}"></div>
+      <div class="two" id="e-single"><div><label class="f" for="e-date">Date</label><input class="field" type="date" id="e-date" value="${esc(d.date)}" max="${today()}"></div>
       <div><label class="f" for="e-time">Time (optional)</label><input class="field" type="time" id="e-time" value="${esc(d.time)}"></div></div>
-      <label class="check" style="margin-top:10px"><input type="checkbox" id="e-none" ${d.noSymptoms ? 'checked' : ''}> No significant symptoms</label>
+      ${rec ? '' : `<label class="check" style="margin-top:6px"><input type="checkbox" id="e-multi"> Same symptoms on several days</label>
+      <div id="multi-cal" class="hidden"></div>`}
+      <label class="check"><input type="checkbox" id="e-none" ${d.noSymptoms ? 'checked' : ''}> No significant symptoms</label>
       <div id="sym-area" class="${d.noSymptoms ? 'hidden' : ''}">
         <p class="small" style="margin:6px 0 0">Tap what you're experiencing, then score each one from 0 to 10. Use <b>?</b> if you're not sure.</p>
         ${usual.length >= 3 ? `<div class="group-h">Your usual</div><div class="chips" id="usual">${usual.map(id => chipFor(id)).join('')}</div>` : ''}
@@ -1428,8 +1460,34 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
       ${rec ? `<p class="small" style="margin-top:18px">Created ${esc(fmtStamp(rec.createdAt))} · last saved ${esc(fmtStamp(rec.updatedAt))}</p>` : ''}`;
     const footer = `<div class="save-msg hidden" id="save-msg" role="alert"></div><div class="row">${rec ? '<button class="btn btn-danger" data-act="delete" style="flex:0 0 auto">Delete</button>' : ''}<button class="btn btn-primary" data-act="save-entry">Save</button></div>`;
     openSheet({ title: rec ? 'Edit entry' : 'Log symptoms', body, footer });
-    F.orig = JSON.stringify(readEntryForm());
-    sheetState.isDirty = () => F && !F.saved && JSON.stringify(readEntryForm()) !== F.orig;
+    F.orig = entrySnapshot();
+    sheetState.isDirty = () => F && !F.saved && entrySnapshot() !== F.orig;
+  }
+  function multiOn() { const m = $('#e-multi'); return !!(m && m.checked); }
+  function entrySnapshot() { return JSON.stringify([readEntryForm(), multiOn() ? [...F.multi].sort() : null]); }
+  function renderCal() {
+    const el = $('#multi-cal');
+    if (!el) return;
+    const mk = F.calMonth, t = today();
+    const [y, m] = mk.split('-').map(Number);
+    const first = C.monthStart(mk), last = C.monthEnd(mk);
+    const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7; // Monday first
+    let cells = '';
+    for (let i = 0; i < lead; i++) cells += '<span></span>';
+    for (let n = C.dayNum(first); n <= C.dayNum(last); n++) {
+      const ds = C.dayStr(n), future = ds > t;
+      cells += `<button type="button" class="cal-d${ds === t ? ' today' : ''}" data-act="cal-day" data-date="${ds}" aria-pressed="${F.multi.has(ds)}" ${future ? 'disabled' : ''} aria-label="${esc(C.fmtDay(ds, true))}">${Number(ds.slice(8))}</button>`;
+    }
+    const sel = [...F.multi].sort();
+    const canNext = C.monthKey(t) > mk;
+    el.innerHTML = `<div class="cal">
+      <div class="cal-h"><button type="button" class="icon-btn" data-act="cal-prev" aria-label="Previous month">‹</button><b>${esc(C.fmtMonth(mk))}</b><button type="button" class="icon-btn" data-act="cal-next" aria-label="Next month" ${canNext ? '' : 'disabled'}>›</button></div>
+      <div class="cal-g cal-w">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
+      <div class="cal-g">${cells}</div>
+      <p class="small" style="margin:8px 0 0"><b>${sel.length} day${sel.length === 1 ? '' : 's'} selected</b>${sel.length ? ': ' + esc(sel.map(x => C.fmtDay(x)).join(', ')) : ''}</p>
+      <div class="row" style="margin-top:6px">${sel.length >= 2 ? '<button type="button" class="btn btn-small" data-act="cal-fill">Fill in the days between</button>' : ''}${sel.length ? '<button type="button" class="btn btn-small" data-act="cal-clear">Clear</button>' : ''}</div>
+      <p class="small" style="margin:8px 0 0">Tap each day the symptoms happened. Each day is saved as its own entry, so you can edit or delete days separately later.</p>
+    </div>`;
   }
   function chipFor(id) {
     const on = F.d.symptoms.some(s => s.id === id);
@@ -1502,8 +1560,33 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
       if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
     } finally { if (F) F.saving = false; }
   }
-  function saveEntry() {
+  async function saveEntry() {
     const d = readEntryForm();
+    if (multiOn()) {
+      const dates = [...F.multi].filter(x => x <= today()).sort();
+      if (!dates.length) return showSaveMsg('Tap at least one day on the calendar.');
+      if (!d.noSymptoms && !d.symptoms.length && !d.notes.trim()) return showSaveMsg("Add at least one symptom, tick 'No significant symptoms', or write a note.");
+      const unnamedM = d.symptoms.find(s => C.ITEM[s.id].custom && !s.label);
+      if (unnamedM) return showSaveMsg('Describe the "' + C.ITEM[unnamedM.id].label + '" you selected.');
+      if (F.saving) return;
+      F.saving = true;
+      const btn = $('[data-act="save-entry"]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+      try {
+        // Ids are fixed per day, so a retry after a failed save never creates duplicates.
+        const items = dates.map(date => ({ id: F.multiIds[date] || (F.multiIds[date] = uuid()), data: Object.assign(JSON.parse(JSON.stringify(d)), { date, time: '' }) }));
+        await Store.saveMany('entry', items);
+        F.saved = true;
+        closeSheet(true);
+        render();
+        toast('Saved for ' + dates.length + ' day' + (dates.length === 1 ? '' : 's') + (Cloud.signedIn() ? '. Syncing…' : ' on this phone'));
+        Cloud.sync();
+      } catch (e) {
+        showSaveMsg('Not saved: ' + (e && e.message ? e.message : 'storage error') + '. Nothing was saved for any of the days, so you can try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+      } finally { F.saving = false; }
+      return;
+    }
     if (!d.date) return showSaveMsg('Choose a date.');
     if (d.date > today()) return showSaveMsg("The date can't be in the future.");
     if (!d.noSymptoms && !d.symptoms.length && !d.notes.trim()) return showSaveMsg("Add at least one symptom, tick 'No significant symptoms', or write a note.");
@@ -1678,7 +1761,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     const targets = [['all', 'All symptoms'], ['group:pain', 'Pain (any location)'], ['group:physical', 'Other physical'], ['group:mood', 'Mood & thinking'], ['group:function', 'Daily life']]
       .concat([...keys].sort().map(k => [k, C.seriesLabel(k, labels)]));
     return `
-      <div class="screen-head"><div><h1>Graphs</h1></div>${syncPill()}</div>
+      <div class="screen-head"><div><h1>Graphs</h1></div>${headActions()}</div>
       ${rangeBar()}
       ${!any ? `<div class="banner info">No symptom entries yet. Graphs fill in as you log. Want to see how they work? Add demo data from the Data tab.</div>` : ''}
       <div class="card" id="card-a">
@@ -1906,7 +1989,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
     const res = C.patterns(all, { from, to: t, today: t });
     const notes = all.filter(r => r.kind === 'note').sort((a, b) => b.data.date.localeCompare(a.data.date));
     return `
-      <div class="screen-head"><div><h1>Patterns to explore</h1></div>${syncPill()}</div>
+      <div class="screen-head"><div><h1>Patterns to explore</h1></div>${headActions()}</div>
       <div class="seg" style="margin-bottom:12px">${[['180', '6 months'], ['365', '1 year'], ['all', 'All time']].map(([v, l]) => `<button data-act="prange" data-v="${v}" aria-pressed="${S.pRange === v}">${l}</button>`).join('')}</div>
       <div class="banner info"><span>These are things that <b>appear</b> in what you've recorded, worked out with simple counts on this phone. They aren't medical conclusions or diagnoses, and they don't show that one thing causes another. They could be worth raising with your doctor.</span></div>
       ${res.insights.length ? res.insights.map((p, i) => `<div class="card insight">
@@ -1948,7 +2031,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
         <div class="row"><button class="btn btn-primary" data-act="cloud-sync">Sync now</button><button class="btn" data-act="cloud-signout">Sign out</button></div>`;
     }
     return `
-      <div class="screen-head"><div><h1>Data & backup</h1><p class="small">${n} record${n === 1 ? '' : 's'} on this phone</p></div>${syncPill()}</div>
+      <div class="screen-head"><div><h1>Data & backup</h1><p class="small">${n} record${n === 1 ? '' : 's'} on this phone</p></div>${headActions()}</div>
       <div class="card"><h2>Cloud backup &amp; sync</h2>${cloud}</div>
       <div class="card"><h2>Export &amp; backup files</h2>
         <p class="small">Save these to Files, iCloud Drive or email. A full backup can be restored here at any time.${Store.meta.lastBackup ? ' Last backup: ' + esc(fmtStamp(Store.meta.lastBackup)) + '.' : ''}</p>
@@ -2148,6 +2231,11 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
       if (el.dataset.v === 'dienogest') { if (!$('#m-name').value) $('#m-name').value = 'Dienogest'; if (!$('#m-dose').value) $('#m-dose').value = settings().dienogestDose || ''; }
     },
     dur: el => { $('#e-duration').value = el.dataset.v; },
+    'cal-day': el => { const ds = el.dataset.date; if (F.multi.has(ds)) F.multi.delete(ds); else F.multi.add(ds); renderCal(); },
+    'cal-prev': () => { const [y, m] = F.calMonth.split('-').map(Number); F.calMonth = m === 1 ? (y - 1) + '-12' : y + '-' + String(m - 1).padStart(2, '0'); renderCal(); },
+    'cal-next': () => { const [y, m] = F.calMonth.split('-').map(Number); const nx = m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0'); if (nx <= C.monthKey(today())) { F.calMonth = nx; renderCal(); } },
+    'cal-fill': () => { const sel = [...F.multi].sort(); for (let n = C.dayNum(sel[0]); n <= C.dayNum(sel[sel.length - 1]); n++) F.multi.add(C.dayStr(n)); renderCal(); },
+    'cal-clear': () => { F.multi.clear(); renderCal(); },
     'save-entry': saveEntry, 'save-bleeding': saveBleeding, 'save-med': saveMed, 'save-note': saveNote,
     delete: deleteCurrent,
     'hist-kind': el => { S.hist.kind = el.dataset.kind; S.histLimit = 60; saveUI(); render(); },
@@ -2237,7 +2325,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
   });
   document.addEventListener('input', e => {
     const el = e.target;
-    if (el.id === 'e-none') return;
+    if (el.id === 'e-none' || el.id === 'e-multi') return;
     const k = el.dataset && el.dataset.in;
     if (k === 'hist-q') { S.hist.q = el.value; S.histLimit = 60; saveUI(); const pos = el.selectionStart; render(); const n = $('[data-in="hist-q"]'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) { /* search inputs */ } }
     if (k === 'sym-label') { const s = F.d.symptoms.find(x => x.id === el.dataset.id); if (s) s.label = el.value; }
@@ -2245,6 +2333,11 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
   document.addEventListener('change', async e => {
     const el = e.target;
     if (el.id === 'e-none') $('#sym-area').classList.toggle('hidden', el.checked);
+    if (el.id === 'e-multi') {
+      if (el.checked) { const cur = $('#e-date').value; if (cur && !F.multi.size) F.multi.add(cur); if (cur) F.calMonth = C.monthKey(cur); renderCal(); }
+      $('#multi-cal').classList.toggle('hidden', !el.checked);
+      $('#e-single').classList.toggle('hidden', el.checked);
+    }
     if (el.id === 'b-ongoing') { $('#b-end').disabled = el.checked; if (!el.checked && !$('#b-end').value) $('#b-end').value = today(); }
     if (el.id === 'restore-file' && el.files[0]) { await doRestore(el.files[0]); el.value = ''; }
     const k = el.dataset && el.dataset.in;
@@ -2257,7 +2350,7 @@ table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px 
   window.addEventListener('online', () => Cloud.sync());
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Cloud.sync(); });
   setInterval(() => { if (Store.list().some(r => r.dirty && !r.demo)) Cloud.sync(); }, 120000);
-  Cloud.onChange(() => { if (!sheetState) { const p = $('.screen-head .pill'); if (p) p.outerHTML = syncPill(); } });
+  Cloud.onChange(() => { if (!sheetState) { const p = $('.screen-head .head-actions'); if (p) p.outerHTML = headActions(); } });
 
   // ---------- start ----------
   async function start() {
