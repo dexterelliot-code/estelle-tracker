@@ -1,0 +1,2276 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estelle's Tracker</title>
+<meta name="description" content="Estelle's private endometriosis symptom tracker">
+<meta name="theme-color" content="#f7f4f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121011" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Estelle">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root {
+  color-scheme: light;
+  --bg: #f7f4f2;
+  --card: #ffffff;
+  --card-2: #f3eeeb;
+  --text: #1f1a1d;
+  --text-2: #5b5258;
+  --muted: #7d7479;
+  --line: #e7e0dc;
+  --accent: #8a3f63;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4e6ec;
+  --danger: #b3261e;
+  --danger-soft: #fbe9e7;
+  --ok: #1f6b3a;
+  --ok-soft: #e5f2e8;
+  --warn: #8a5a00;
+  --warn-soft: #fbf0d9;
+  --chart-surface: #fcfcfb;
+  --chart-grid: #ece8e3;
+  --chart-axis: #c3c2b7;
+  --chart-muted: #6f6c66;
+  --chart-band: rgba(227, 73, 72, 0.10);
+  --chart-logged: #9a8f95;
+  --chart-marker: #6250d6;
+  --chart-bar: #2a78d6;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
+  --seq-0: #e8e4e1; --seq-1: #cde2fb; --seq-2: #86b6ef; --seq-3: #3987e5; --seq-4: #1c5cab; --seq-5: #0d366b;
+  --radius: 16px;
+  --tabbar-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #121011;
+    --card: #1d1a1c;
+    --card-2: #262225;
+    --text: #f2ecef;
+    --text-2: #c9bfc4;
+    --muted: #a39aa0;
+    --line: #342f32;
+    --accent: #e3a3c1;
+    --accent-ink: #2a0f1d;
+    --accent-soft: #3a2430;
+    --danger: #ff8a80;
+    --danger-soft: #3b1f1d;
+    --ok: #7fd197;
+    --ok-soft: #1c3324;
+    --warn: #f2c66d;
+    --warn-soft: #3a2f17;
+    --chart-surface: #1a1a19;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #4a4a46;
+    --chart-muted: #a3a29a;
+    --chart-band: rgba(230, 103, 103, 0.16);
+    --chart-logged: #8d8489;
+    --chart-marker: #9085e9;
+    --chart-bar: #3987e5;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --seq-0: #2a2629; --seq-1: #184f95; --seq-2: #256abf; --seq-3: #3987e5; --seq-4: #86b6ef; --seq-5: #cde2fb;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 18px; font-weight: 650; }
+h3 { font-size: 15px; font-weight: 650; }
+.small { font-size: 13px; color: var(--text-2); }
+.muted { color: var(--muted); }
+.hidden { display: none !important; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+#app { max-width: 560px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 16px) 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px); }
+.screen-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 4px 0 16px; }
+.screen-head p { margin: 4px 0 0; }
+
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 0 0 14px; border: 1px solid var(--line); }
+.card > h2, .card > h3 { margin-bottom: 8px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.stack > * + * { margin-top: 10px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-weight: 600; text-decoration: none; color: var(--text); }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn-soft { background: var(--accent-soft); color: var(--text); border-color: transparent; }
+.btn-danger { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.btn-block { width: 100%; }
+.btn-big { min-height: 64px; font-size: 19px; border-radius: 18px; }
+.btn-small { min-height: 36px; padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+.btn[disabled] { opacity: 0.55; cursor: default; }
+.link-btn { background: none; border: 0; color: var(--accent); font-weight: 600; padding: 6px 0; min-height: 36px; }
+.icon-btn { background: none; border: 0; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--text); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > .btn { flex: 1 1 0; }
+.quick { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+.quick .btn { flex-direction: column; gap: 4px; min-height: 72px; font-size: 13px; padding: 8px 6px; text-align: center; line-height: 1.2; }
+
+/* Chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 8px 13px; font-size: 14px; min-height: 38px; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.chip .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.seg { display: flex; background: var(--card-2); border-radius: 12px; padding: 3px; gap: 2px; }
+.seg button { white-space: nowrap; flex: 1; border: 0; background: none; border-radius: 9px; min-height: 36px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+
+/* Status */
+.pill { white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--card-2); color: var(--text-2); border: 0; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.err { background: var(--danger-soft); color: var(--danger); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+.banner { border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+.banner.warn { background: var(--warn-soft); color: var(--warn); }
+.banner.err { background: var(--danger-soft); color: var(--danger); }
+.banner.info { background: var(--accent-soft); color: var(--text); }
+.banner.ok { background: var(--ok-soft); color: var(--ok); }
+.demo-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 2px 6px; }
+
+/* Forms */
+label.f { display: block; font-size: 14px; font-weight: 600; color: var(--text-2); margin: 14px 0 6px; }
+.field { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 16px; }
+textarea.field { min-height: 84px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two label.f { margin-top: 0; }
+.check { display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 15px; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); }
+details.more { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 4px; }
+details.more > summary { list-style: none; min-height: 48px; display: flex; align-items: center; justify-content: space-between; font-weight: 650; cursor: pointer; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::after { content: "+"; font-size: 22px; color: var(--muted); }
+details.more[open] > summary::after { content: "–"; }
+details.plain > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 14px; min-height: 36px; display: flex; align-items: center; }
+
+/* Symptom picker */
+.group-h { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 16px 0 8px; }
+.sym-row { background: var(--card-2); border-radius: 14px; padding: 12px; margin-top: 10px; }
+.sym-row-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 650; }
+.sev { display: grid; grid-template-columns: repeat(11, 1fr) 1.3fr; gap: 3px; margin-top: 10px; }
+.sev button { min-height: 40px; border: 1px solid var(--line); background: var(--card); border-radius: 9px; font-size: 14px; font-weight: 600; padding: 0; }
+.sev button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.sev-anchors { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+/* Sheet (full screen modal) */
+.sheet-wrap { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.35); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--bg); width: 100%; max-width: 560px; height: 100%; display: flex; flex-direction: column; }
+@media (min-width: 600px) { .sheet { height: 94%; border-radius: 20px 20px 0 0; } }
+.sheet-h { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 8px) 8px 8px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+.sheet-b { flex: 1; overflow-y: auto; padding: 8px 16px 24px; -webkit-overflow-scrolling: touch; }
+.sheet-f { padding: 10px 16px calc(env(safe-area-inset-bottom) + 10px); border-top: 1px solid var(--line); background: var(--card); }
+.save-msg { font-size: 14px; margin-bottom: 8px; }
+
+/* Tab bar */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); height: var(--tabbar-h); }
+.tab { border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 0; }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab.log span.circle { width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; margin-top: -2px; }
+.tab.log { color: var(--text); }
+
+/* Lists */
+.day-h { font-size: 13px; font-weight: 700; color: var(--muted); margin: 18px 4px 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+.item { display: block; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.item-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.item-title { font-weight: 650; margin-top: 2px; }
+.sym-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sym-tag { font-size: 13px; background: var(--card-2); border-radius: 8px; padding: 3px 8px; }
+.sym-tag b { font-variant-numeric: tabular-nums; }
+.note { font-size: 14px; color: var(--text-2); margin-top: 6px; white-space: pre-wrap; }
+.kind-ico { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+/* Overview strip */
+.strip { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; }
+.cell { aspect-ratio: 1 / 1.25; border-radius: 6px; border: 0; padding: 0; position: relative; background: var(--seq-0); }
+.cell.unk { background: transparent; border: 1.5px dashed var(--line); }
+.cell .bl { position: absolute; left: 50%; bottom: 3px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--series-8); }
+.cell.today { outline: 2px solid var(--text); outline-offset: 1px; }
+.strip-labels { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--text-2); margin-top: 10px; align-items: center; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.legend .box { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+
+/* Charts */
+.chart { width: 100%; overflow: hidden; border-radius: 10px; touch-action: pan-y; }
+.chart svg { display: block; }
+.picked { background: var(--card-2); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 14px; }
+.picked-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.picked-row b { font-variant-numeric: tabular-nums; }
+.range-bar { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: calc(env(safe-area-inset-top) + 6px) 0 10px; margin: -6px 0 6px; }
+.month { border-top: 1px solid var(--line); padding: 12px 0; }
+.month:first-child { border-top: 0; }
+.month-h { display: flex; justify-content: space-between; align-items: baseline; }
+.cov { height: 6px; background: var(--card-2); border-radius: 3px; margin: 6px 0 8px; overflow: hidden; }
+.cov > div { height: 100%; background: var(--chart-logged); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--card-2); border-radius: 10px; padding: 8px; }
+.stat .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 11.5px; color: var(--text-2); line-height: 1.25; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t th, table.t td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+
+/* Insights */
+.insight .type { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
+.insight .meta { font-size: 13px; color: var(--text-2); margin-top: 8px; }
+.insight .limits { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+/* Toast */
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px); z-index: 60; background: var(--text); color: var(--bg); border-radius: 14px; padding: 12px 16px; font-size: 15px; display: flex; gap: 14px; align-items: center; max-width: calc(100% - 32px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.toast button { background: none; border: 0; color: inherit; font-weight: 700; text-decoration: underline; min-height: 32px; }
+
+/* Print summary */
+#print { display: none; }
+@media print {
+  body { background: #fff; color: #000; }
+  #app, .tabbar, .sheet-wrap, .toast { display: none !important; }
+  #print { display: block; font-size: 12px; }
+  #print h1 { font-size: 20px; }
+  #print h2 { font-size: 15px; margin: 18px 0 6px; }
+  #print svg { max-width: 100%; height: auto; }
+  #print table { width: 100%; border-collapse: collapse; }
+  #print th, #print td { border-bottom: 1px solid #ccc; padding: 4px; text-align: left; }
+  #print .pb { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"><p style="padding:40px 0;text-align:center;color:#7d7479">Loading…</p></main>
+<nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+<div id="print" aria-hidden="true"></div>
+<noscript>This app needs JavaScript turned on.</noscript>
+<script>/* Core: symptom catalogue, date helpers, daily aggregation, monthly stats,
+   patterns and sync merge rules. Pure functions only (no DOM, no storage),
+   so they can be tested in Node. */
+(function (root) {
+  'use strict';
+
+  // ---------- Symptom catalogue ----------
+  const GROUPS = [
+    { id: 'pain', label: 'Pain', scale: ['no pain', 'worst pain imaginable'], items: [
+      { id: 'pelvic', label: 'General pelvic pain' },
+      { id: 'ovary_r', label: 'Right ovarian pain' },
+      { id: 'ovary_l', label: 'Left ovarian pain' },
+      { id: 'lower_back', label: 'Lower back pain' },
+      { id: 'hip', label: 'Hip pain' },
+      { id: 'front_pelvis', label: 'Front pelvis pain' },
+      { id: 'knee_pain', label: 'Knee pain' },
+      { id: 'knee_swelling', label: 'Knee swelling', scale: ['no swelling', 'severe swelling'] },
+      { id: 'rectal', label: 'Rectal / butt lightning pain' },
+      { id: 'sex_pain', label: 'Pain during sex' },
+      { id: 'other_pain', label: 'Other pain', custom: true }
+    ]},
+    { id: 'physical', label: 'Other physical', scale: ['not present', 'as bad as it gets'], items: [
+      { id: 'bloating', label: 'Bloating / endo belly' },
+      { id: 'nausea', label: 'Nausea' },
+      { id: 'breast', label: 'Breast pain or tenderness' },
+      { id: 'fatigue', label: 'Fatigue' },
+      { id: 'low_energy', label: 'Low energy' },
+      { id: 'constipation', label: 'Constipation' },
+      { id: 'painful_bm', label: 'Painful bowel movements' },
+      { id: 'other_physical', label: 'Other physical symptom', custom: true }
+    ]},
+    { id: 'mood', label: 'Mood & thinking', scale: ['not at all', 'most intense'], items: [
+      { id: 'low_mood', label: 'Low mood' },
+      { id: 'anxiety', label: 'Anxiety' },
+      { id: 'dread', label: 'Dread / impending doom' },
+      { id: 'irritability', label: 'Irritability' },
+      { id: 'anger', label: 'Anger' },
+      { id: 'emo_sensitivity', label: 'Emotional sensitivity' },
+      { id: 'crying', label: 'Crying episodes' },
+      { id: 'low_motivation', label: 'Low motivation' },
+      { id: 'concentration', label: 'Difficulty concentrating' },
+      { id: 'overwhelmed', label: 'Feeling overwhelmed' }
+    ]},
+    { id: 'function', label: 'Daily life', scale: ['no impact', "couldn't do it at all"], items: [
+      { id: 'work', label: 'Difficulty working' },
+      { id: 'daily_tasks', label: 'Difficulty with daily tasks' },
+      { id: 'sleep_disrupted', label: 'Disrupted sleep' },
+      { id: 'movement', label: 'Reduced ability to exercise or move' },
+      { id: 'social', label: 'Social withdrawal' },
+      { id: 'other_impact', label: 'Other impact on daily life', custom: true }
+    ]}
+  ];
+
+  const ITEM = {};
+  GROUPS.forEach(g => g.items.forEach(it => { ITEM[it.id] = Object.assign({ group: g.id }, it); }));
+  const GROUP = {};
+  GROUPS.forEach(g => { GROUP[g.id] = g; });
+
+  function scaleFor(id) {
+    const it = ITEM[id];
+    if (!it) return ['none', 'worst'];
+    return it.scale || GROUP[it.group].scale;
+  }
+
+  // A recorded symptom: { id, severity: 0-10 | null (not rated / unknown), label? (custom text) }
+  function seriesKey(s) {
+    const it = ITEM[s.id];
+    if (it && it.custom && s.label && s.label.trim()) return s.id + ':' + s.label.trim().toLowerCase();
+    return s.id;
+  }
+  function seriesGroup(key) {
+    const it = ITEM[key.split(':')[0]];
+    return it ? it.group : 'physical';
+  }
+  function seriesLabel(key, labels) {
+    const [id, custom] = key.split(':');
+    const it = ITEM[id];
+    if (custom) {
+      const nice = (labels && labels[key]) || custom;
+      return (it ? it.label.replace(/ symptom$/, '') : 'Other') + ': ' + nice;
+    }
+    return it ? it.label : key;
+  }
+
+  // ---------- Dates (local calendar days, handled as UTC day numbers) ----------
+  const DAY = 86400000;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function todayStr(now) {
+    const d = now || new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function dayNum(str) {
+    const [y, m, d] = str.split('-').map(Number);
+    return Math.round(Date.UTC(y, m - 1, d) / DAY);
+  }
+  function dayStr(n) {
+    const d = new Date(n * DAY);
+    return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+  }
+  function addDays(str, k) { return dayStr(dayNum(str) + k); }
+  function monthKey(str) { return str.slice(0, 7); }
+  function monthStart(mk) { return mk + '-01'; }
+  function monthEnd(mk) {
+    const [y, m] = mk.split('-').map(Number);
+    return dayStr(Math.round(Date.UTC(y, m, 1) / DAY) - 1);
+  }
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDay(str, withYear) {
+    const [y, m, d] = str.split('-').map(Number);
+    return d + ' ' + MONTHS[m - 1] + (withYear ? ' ' + y : '');
+  }
+  function fmtMonth(mk) {
+    const [y, m] = mk.split('-').map(Number);
+    return MONTHS[m - 1] + ' ' + y;
+  }
+
+  // ---------- Record helpers ----------
+  function active(records, includeDemo) {
+    return records.filter(r => !r.deleted && (includeDemo || !r.demo));
+  }
+  function isPresent(sev) { return sev === null || sev === undefined || sev > 0; }
+
+  // Build per-day observations from symptom entries.
+  // Rule: a day with no entry is UNKNOWN. A "no significant symptoms" entry
+  // records 0 for any symptom not otherwise recorded that day.
+  function buildDays(records) {
+    const days = new Map();
+    const labels = {};
+    for (const r of records) {
+      if (r.kind !== 'entry' || r.deleted) continue;
+      const d = r.data.date;
+      if (!d) continue;
+      let day = days.get(d);
+      if (!day) { day = { date: d, entries: [], noSymptoms: false, sym: new Map() }; days.set(d, day); }
+      day.entries.push(r);
+      if (r.data.noSymptoms) { day.noSymptoms = true; continue; }
+      for (const s of (r.data.symptoms || [])) {
+        const key = seriesKey(s);
+        if (s.label) labels[key] = s.label.trim();
+        const sev = (s.severity === null || s.severity === undefined || s.severity === '') ? null : Number(s.severity);
+        let o = day.sym.get(key);
+        if (!o) { o = { max: null, present: false, count: 0 }; day.sym.set(key, o); }
+        o.count++;
+        if (sev !== null) o.max = o.max === null ? sev : Math.max(o.max, sev);
+        if (isPresent(sev)) o.present = true;
+      }
+    }
+    return { days, labels };
+  }
+
+  // Value of one symptom on one day: number, 'unrated' (present, no score), or undefined (unknown)
+  function dayValue(day, key) {
+    if (!day) return undefined;
+    const o = day.sym.get(key);
+    if (o) return o.max !== null ? o.max : 'unrated';
+    if (day.noSymptoms) return 0;
+    return undefined;
+  }
+  // Highest recorded value across a set of keys (null keys = all symptoms).
+  // Returns { value: number|undefined, present: bool, implied: bool }
+  function dayGroupValue(day, keys) {
+    if (!day) return { value: undefined, present: false, implied: false };
+    let max, present = false, any = false;
+    for (const [key, o] of day.sym) {
+      if (keys && !keys.has(key) && !keys.has('group:' + seriesGroup(key))) continue;
+      any = true;
+      if (o.present) present = true;
+      if (o.max !== null) max = max === undefined ? o.max : Math.max(max, o.max);
+    }
+    if (max === undefined && day.noSymptoms) return { value: 0, present, implied: !any };
+    return { value: max, present, implied: false };
+  }
+
+  function seriesPoints(daysMap, key, from, to) {
+    const pts = [];
+    const a = dayNum(from), b = dayNum(to);
+    for (const day of daysMap.values()) {
+      const n = dayNum(day.date);
+      if (n < a || n > b) continue;
+      const v = dayValue(day, key);
+      if (v === undefined) continue;
+      pts.push({ n, date: day.date, value: v === 'unrated' ? null : v, unrated: v === 'unrated', implied: !day.sym.has(key) });
+    }
+    return pts.sort((p, q) => p.n - q.n);
+  }
+
+  // Episodes: runs of days where the symptom set is recorded as present.
+  // Two recorded days up to MERGE_GAP days apart join the same episode.
+  const MERGE_GAP = 2;
+  function episodes(daysMap, keys) {
+    const ns = [];
+    for (const day of daysMap.values()) {
+      if (dayGroupValue(day, keys).present) ns.push(dayNum(day.date));
+    }
+    ns.sort((a, b) => a - b);
+    const out = [];
+    for (const n of ns) {
+      const last = out[out.length - 1];
+      if (last && n - last.endN <= MERGE_GAP) { last.endN = n; last.days++; }
+      else out.push({ startN: n, endN: n, days: 1 });
+    }
+    return out.map(e => ({ start: dayStr(e.startN), end: dayStr(e.endN), recordedDays: e.days }));
+  }
+
+  function bleedingDaySet(records, today) {
+    const set = new Set();
+    for (const r of records) {
+      if (r.kind !== 'bleeding' || r.deleted || !r.data.startDate) continue;
+      const a = dayNum(r.data.startDate);
+      const b = dayNum(r.data.endDate || today);
+      for (let n = a; n <= Math.max(a, b) && n - a < 400; n++) set.add(n);
+    }
+    return set;
+  }
+
+  // ---------- Monthly comparison ----------
+  function keySetFor(target) {
+    if (!target || target === 'all') return null;
+    if (target.startsWith('group:')) return new Set([target]);
+    return new Set([target]);
+  }
+  function avg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null; }
+
+  function monthlySummary(records, opts) {
+    const { from, to, target, today } = opts;
+    const { days, labels } = buildDays(records);
+    const keys = keySetFor(target);
+    const eps = episodes(days, keys);
+    const bleed = bleedingDaySet(records, today);
+    const lastDay = dayNum(to) < dayNum(today) ? to : today;
+    const months = [];
+    let mk = monthKey(from);
+    while (mk <= monthKey(lastDay)) {
+      const s = monthStart(mk) < from ? from : monthStart(mk);
+      const e = monthEnd(mk) > lastDay ? lastDay : monthEnd(mk);
+      const sN = dayNum(s), eN = dayNum(e);
+      let logged = 0, symptomatic = 0, highest = null, bleedingDays = 0;
+      const dailyMax = [], mood = [], phys = [];
+      const counts = new Map();
+      for (let n = sN; n <= eN; n++) {
+        if (bleed.has(n)) bleedingDays++;
+        const day = days.get(dayStr(n));
+        if (!day) continue;
+        logged++;
+        const g = dayGroupValue(day, keys);
+        if (g.present) symptomatic++;
+        if (typeof g.value === 'number') { dailyMax.push(g.value); highest = highest === null ? g.value : Math.max(highest, g.value); }
+        const m = dayGroupValue(day, new Set(['group:mood']));
+        if (typeof m.value === 'number') mood.push(m.value);
+        const p = dayGroupValue(day, new Set(['group:pain', 'group:physical']));
+        if (typeof p.value === 'number') phys.push(p.value);
+        for (const [key, o] of day.sym) {
+          if (o.present) counts.set(key, (counts.get(key) || 0) + 1);
+        }
+      }
+      const top = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3)
+        .map(([key, c]) => ({ key, label: seriesLabel(key, labels), days: c }));
+      months.push({
+        month: mk, from: s, to: e,
+        daysInPeriod: eN - sN + 1,
+        loggedDays: logged,
+        symptomaticDays: symptomatic,
+        ratedDays: dailyMax.length,
+        avgSeverity: avg(dailyMax),
+        highest,
+        episodes: eps.filter(x => x.start >= s && x.start <= e).length,
+        top,
+        moodAvg: avg(mood), physAvg: avg(phys),
+        bleedingDays
+      });
+      const [y, m] = mk.split('-').map(Number);
+      mk = m === 12 ? (y + 1) + '-01' : y + '-' + pad(m + 1);
+    }
+    return months;
+  }
+
+  // ---------- Patterns to explore ----------
+  function round1(x) { return Math.round(x * 10) / 10; }
+  function patterns(records, opts) {
+    const { from, to, today } = opts;
+    const inRange = records.filter(r => r.kind !== 'entry' || (r.data.date >= from && r.data.date <= to));
+    const { days, labels } = buildDays(inRange);
+    const dayList = [...days.values()].sort((a, b) => a.date.localeCompare(b.date));
+    const out = [];
+    const loggedCount = dayList.length;
+    const range = loggedCount ? [dayList[0].date, dayList[dayList.length - 1].date] : null;
+    const common = 'Only days you logged are included; unlogged days are unknown, not symptom-free.';
+
+    // 1. Symptoms that occur together
+    const presentDays = new Map();
+    for (const day of dayList) for (const [k, o] of day.sym) if (o.present) {
+      if (!presentDays.has(k)) presentDays.set(k, []);
+      presentDays.get(k).push(day.date);
+    }
+    const keys = [...presentDays.keys()].filter(k => presentDays.get(k).length >= 5);
+    const pairs = [];
+    for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) {
+      const A = new Set(presentDays.get(keys[i])), B = presentDays.get(keys[j]);
+      const both = B.filter(d => A.has(d));
+      const ratio = both.length / Math.min(A.size, B.length);
+      if (both.length >= 5 && ratio >= 0.6) pairs.push({ a: keys[i], b: keys[j], both, ratio, na: A.size, nb: B.length });
+    }
+    pairs.sort((p, q) => q.both.length - p.both.length);
+    for (const p of pairs.slice(0, 4)) {
+      out.push({
+        type: 'Occur together',
+        title: seriesLabel(p.a, labels) + ' and ' + seriesLabel(p.b, labels),
+        text: 'These were recorded on the same day ' + p.both.length + ' times. ' +
+          seriesLabel(p.a, labels) + ' was recorded on ' + p.na + ' days and ' +
+          seriesLabel(p.b, labels).toLowerCase() + ' on ' + p.nb + ' days, so they appear to coincide more often than not.',
+        range: [p.both[0], p.both[p.both.length - 1]],
+        basis: p.both.length + ' shared days out of ' + loggedCount + ' logged days',
+        days: p.both,
+        limits: common + ' If you tend to log both together out of habit, that can inflate this. Occurring together does not mean one causes the other.'
+      });
+    }
+
+    // 2. Recurring at similar intervals
+    for (const k of keys) {
+      const eps = episodes(days, new Set([k]));
+      if (eps.length < 4) continue;
+      const starts = eps.map(e => dayNum(e.start));
+      const gaps = starts.slice(1).map((s, i) => s - starts[i]);
+      const mean = avg(gaps);
+      const sd = Math.sqrt(avg(gaps.map(g => (g - mean) ** 2)));
+      if (mean >= 7 && sd / mean <= 0.25) {
+        out.push({
+          type: 'Possible recurring pattern',
+          title: seriesLabel(k, labels) + ': roughly every ' + Math.round(mean) + ' days',
+          text: 'The last ' + eps.length + ' episodes started ' + gaps.join(', ') + ' days apart. This is a possible recurring pattern, not a confirmed cycle.',
+          range: [eps[0].start, eps[eps.length - 1].end],
+          basis: eps.length + ' recorded episodes (days up to ' + MERGE_GAP + ' apart count as one episode)',
+          days: eps.map(e => e.start === e.end ? e.start : e.start + ' to ' + e.end),
+          limits: common + ' Gaps in logging can split or merge episodes. This does not identify a menstrual cycle, ovulation or a hormonal cause.'
+        });
+      }
+    }
+
+    // 3. Pain severity across successive months
+    const months = monthlySummary(inRange, { from, to, target: 'group:pain', today });
+    const good = months.filter(m => m.ratedDays >= 8 && m.avgSeverity !== null);
+    if (good.length >= 3) {
+      const first = good[0], last = good[good.length - 1];
+      const diff = last.avgSeverity - first.avgSeverity;
+      const dir = Math.abs(diff) < 1.5 ? 'appears broadly similar' : (diff > 0 ? 'appears to have increased' : 'appears to have decreased');
+      out.push({
+        type: 'Change over months',
+        title: 'Pain severity ' + dir,
+        text: 'Average of each logged day\'s highest pain score: ' + good.map(m => fmtMonth(m.month) + ' ' + round1(m.avgSeverity)).join(', ') + '.',
+        range: [good[0].from, last.to],
+        basis: good.map(m => fmtMonth(m.month) + ': ' + m.ratedDays + ' days with a pain score').join('; '),
+        days: [],
+        limits: 'Months with fewer than 8 days with a pain score are left out. ' + common + ' You may log more on bad days, which raises averages.'
+      });
+    }
+
+    // 4. Mood and physical symptoms coinciding
+    const moodSet = new Set(['group:mood']), physSet = new Set(['group:pain', 'group:physical']);
+    let bothRated = 0; const highBoth = [];
+    for (const day of dayList) {
+      const m = dayGroupValue(day, moodSet), p = dayGroupValue(day, physSet);
+      if (typeof m.value === 'number' && typeof p.value === 'number' && !m.implied && !p.implied) {
+        bothRated++;
+        if (m.value >= 5 && p.value >= 5) highBoth.push(day.date);
+      }
+    }
+    if (highBoth.length >= 4) {
+      out.push({
+        type: 'Mood and physical together',
+        title: 'Strong mood and physical symptoms on the same days',
+        text: 'On ' + highBoth.length + ' of the ' + bothRated + ' days where you rated both, mood and physical symptoms were both 5 or higher. They appear to coincide on these days.',
+        range: [highBoth[0], highBoth[highBoth.length - 1]],
+        basis: highBoth.length + ' days out of ' + bothRated + ' days with both rated',
+        days: highBoth,
+        limits: common + ' This shows timing only. It does not show that one causes the other, or that either is hormonal.'
+      });
+    }
+
+    // 5. Context: stress, sleep, activity
+    function compare(name, pick, lowLabel, highLabel) {
+      const low = [], high = [];
+      for (const day of dayList) {
+        const ctx = day.entries.map(e => pick(e.data.context || {})).filter(v => v !== undefined);
+        if (!ctx.length) continue;
+        const g = dayGroupValue(day, physSet);
+        if (typeof g.value !== 'number') continue;
+        const c = ctx[0];
+        if (c === 'low') low.push({ d: day.date, v: g.value });
+        if (c === 'high') high.push({ d: day.date, v: g.value });
+      }
+      if (low.length >= 5 && high.length >= 5) {
+        const a = avg(low.map(x => x.v)), b = avg(high.map(x => x.v));
+        if (Math.abs(b - a) >= 1.5) {
+          out.push({
+            type: 'Possible relationship',
+            title: 'Pain/physical scores and ' + name,
+            text: 'On days with ' + highLabel + ', your highest pain/physical score averaged ' + round1(b) + ', compared with ' + round1(a) + ' on days with ' + lowLabel + '. Higher scores appear to coincide with ' + highLabel + '.',
+            range: [[...low, ...high].map(x => x.d).sort()[0], [...low, ...high].map(x => x.d).sort().pop()],
+            basis: high.length + ' days with ' + highLabel + ', ' + low.length + ' days with ' + lowLabel,
+            days: high.map(x => x.d),
+            limits: common + ' Only days where you recorded ' + name + ' are included. The link could run either way (for example pain disturbing sleep), or both could share another cause.'
+          });
+        }
+      }
+    }
+    const num = v => (v === '' || v === null || v === undefined) ? undefined : Number(v);
+    compare('stress', c => { const s = num(c.stress); return s === undefined ? undefined : s >= 7 ? 'high' : s <= 3 ? 'low' : 'mid'; }, 'stress 3 or below', 'stress 7 or above');
+    compare('sleep', c => { const s = num(c.sleepHours); return s === undefined ? undefined : s < 6 ? 'high' : s >= 7 ? 'low' : 'mid'; }, '7+ hours of sleep', 'under 6 hours of sleep');
+    compare('activity', c => !c.exercise ? undefined : (c.exercise === 'moderate' || c.exercise === 'hard') ? 'high' : c.exercise === 'none' ? 'low' : 'mid', 'no exercise', 'moderate or hard exercise');
+
+    return { insights: out, loggedDays: loggedCount, range };
+  }
+
+  // ---------- Sync merge rules (last write wins, per record) ----------
+  function fromRemote(row) {
+    return { id: row.id, kind: row.kind, data: row.data || {}, createdAt: row.created_at, updatedAt: row.updated_at, deleted: !!row.deleted, demo: false, dirty: false };
+  }
+  function toRemote(r, userId) {
+    return { id: r.id, user_id: userId, kind: r.kind, data: r.data, created_at: r.createdAt, updated_at: r.updatedAt, deleted: !!r.deleted };
+  }
+  function t(x) { return Date.parse(x) || 0; }
+  // Returns the local records to write after pulling remote rows.
+  function mergeRemote(localById, remoteRows) {
+    const puts = [];
+    for (const row of remoteRows) {
+      const remote = fromRemote(row);
+      const local = localById.get(remote.id);
+      if (!local) { puts.push(remote); continue; }
+      if (local.demo) continue;
+      const lt = t(local.updatedAt), rt = t(remote.updatedAt);
+      if (rt > lt) puts.push(remote);
+      else if (rt === lt && local.dirty) puts.push(Object.assign({}, local, { dirty: false }));
+      else if (rt < lt && !local.dirty) puts.push(Object.assign({}, local, { dirty: true }));
+    }
+    return puts;
+  }
+  // Merge for restoring a backup: imported record wins only if newer.
+  function mergeImport(localById, imported) {
+    const puts = []; let added = 0, updated = 0, skipped = 0;
+    for (const r of imported) {
+      if (!r || !r.id || !r.kind) { skipped++; continue; }
+      const local = localById.get(r.id);
+      const rec = { id: r.id, kind: r.kind, data: r.data || {}, createdAt: r.createdAt || new Date().toISOString(), updatedAt: r.updatedAt || new Date().toISOString(), deleted: !!r.deleted, demo: !!r.demo, dirty: !r.demo };
+      if (!local) { puts.push(rec); added++; }
+      else if (t(rec.updatedAt) > t(local.updatedAt)) { puts.push(rec); updated++; }
+      else skipped++;
+    }
+    return { puts, added, updated, skipped };
+  }
+
+  const api = { GROUPS, ITEM, GROUP, scaleFor, seriesKey, seriesGroup, seriesLabel,
+    todayStr, dayNum, dayStr, addDays, monthKey, monthStart, monthEnd, fmtDay, fmtMonth, MONTHS,
+    active, buildDays, dayValue, dayGroupValue, seriesPoints, episodes, bleedingDaySet, MERGE_GAP,
+    monthlySummary, patterns, fromRemote, toRemote, mergeRemote, mergeImport, isPresent };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Core = api;
+})(this);
+</script>
+<script>/* Storage on the phone (IndexedDB) and cloud sync (Supabase REST, no SDK). */
+(function (root) {
+  'use strict';
+  const DB_NAME = 'estelle-endo-tracker';
+  const DB_VERSION = 1;
+  let db = null;
+
+  function open() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        if (!d.objectStoreNames.contains('records')) d.createObjectStore('records', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta', { keyPath: 'key' });
+      };
+      req.onsuccess = () => { db = req.result; resolve(db); };
+      req.onerror = () => reject(req.error || new Error('Could not open storage'));
+      req.onblocked = () => reject(new Error('Storage is busy in another tab'));
+    });
+  }
+  function tx(store, mode, fn) {
+    return new Promise((resolve, reject) => {
+      const t = db.transaction(store, mode);
+      let result;
+      t.oncomplete = () => resolve(result);
+      t.onerror = () => reject(t.error || new Error('Storage error'));
+      t.onabort = () => reject(t.error || new Error('Storage write was aborted'));
+      result = fn(t.objectStore(store));
+    });
+  }
+  function getAll(store) {
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(store).objectStore(store).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  const Store = {
+    records: new Map(),
+    meta: {},
+    async init() {
+      await open();
+      const recs = await getAll('records');
+      recs.forEach(r => this.records.set(r.id, r));
+      const metas = await getAll('meta');
+      metas.forEach(m => { this.meta[m.key] = m.value; });
+      try { if (navigator.storage && navigator.storage.persist) this.persisted = await navigator.storage.persist(); } catch (e) { /* optional */ }
+    },
+    list() { return [...this.records.values()]; },
+    // Writes go to IndexedDB first; memory is only updated after the write succeeds.
+    async putMany(recs) {
+      if (!recs.length) return;
+      await tx('records', 'readwrite', s => recs.forEach(r => s.put(r)));
+      recs.forEach(r => this.records.set(r.id, r));
+    },
+    async save(kind, id, data, opts) {
+      const now = new Date().toISOString();
+      const prev = this.records.get(id);
+      const rec = {
+        id, kind, data,
+        createdAt: prev ? prev.createdAt : now,
+        updatedAt: now,
+        deleted: false,
+        demo: !!(opts && opts.demo) || !!(prev && prev.demo),
+        dirty: true
+      };
+      if (rec.demo) rec.dirty = false;
+      await this.putMany([rec]);
+      return rec;
+    },
+    // Deletes become tombstones (content removed) so the deletion syncs to the cloud.
+    async remove(id) {
+      const prev = this.records.get(id);
+      if (!prev) return;
+      if (prev.demo) { await tx('records', 'readwrite', s => s.delete(id)); this.records.delete(id); return; }
+      const rec = Object.assign({}, prev, { data: {}, deleted: true, updatedAt: new Date().toISOString(), dirty: true });
+      await this.putMany([rec]);
+    },
+    async hardDelete(ids) {
+      await tx('records', 'readwrite', s => ids.forEach(id => s.delete(id)));
+      ids.forEach(id => this.records.delete(id));
+    },
+    async clearAll() {
+      await tx('records', 'readwrite', s => s.clear());
+      this.records.clear();
+    },
+    async setMeta(key, value) {
+      await tx('meta', 'readwrite', s => s.put({ key, value }));
+      this.meta[key] = value;
+    }
+  };
+
+  // ---------- Cloud (Supabase) ----------
+  const Cloud = {
+    status: { state: 'local', message: '' },
+    busy: false,
+    listeners: [],
+    onChange(fn) { this.listeners.push(fn); },
+    set(state, message) { this.status = { state, message }; this.listeners.forEach(f => f(this.status)); },
+    cfg() { return Store.meta.cloud || null; },
+    session() { return Store.meta.session || null; },
+    configured() { const c = this.cfg(); return !!(c && c.url && c.key); },
+    signedIn() { return !!this.session(); },
+    base() { return this.cfg().url.replace(/\/+$/, ''); },
+
+    async authCall(path, body) {
+      let res;
+      try {
+        res = await fetch(this.base() + '/auth/v1/' + path, {
+          method: 'POST',
+          headers: { 'apikey': this.cfg().key, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch (e) { throw new Error('Could not reach the cloud database. Check the Project URL and your connection.'); }
+      let json = {};
+      try { json = await res.json(); } catch (e) { /* empty */ }
+      if (!res.ok) throw new Error(json.error_description || json.msg || json.message || json.error || ('Error ' + res.status));
+      return json;
+    },
+    async storeSession(json) {
+      if (!json.access_token) return null;
+      const s = {
+        access_token: json.access_token,
+        refresh_token: json.refresh_token,
+        expires_at: json.expires_at || (Math.floor(Date.now() / 1000) + (json.expires_in || 3600)),
+        user: { id: json.user && json.user.id, email: json.user && json.user.email }
+      };
+      await Store.setMeta('session', s);
+      return s;
+    },
+    async signUp(email, password) {
+      const json = await this.authCall('signup', { email, password });
+      const s = await this.storeSession(json);
+      return { session: s };
+    },
+    async signIn(email, password) {
+      const json = await this.authCall('token?grant_type=password', { email, password });
+      return this.storeSession(json);
+    },
+    async signOut() { await Store.setMeta('session', null); this.set('signed-out', 'Signed out of the cloud. New entries are saved on this phone only.'); },
+    async token(force) {
+      const s = this.session();
+      if (!s) throw Object.assign(new Error('Not signed in'), { auth: true });
+      if (!force && s.expires_at - 60 > Date.now() / 1000) return s.access_token;
+      try {
+        const json = await this.authCall('token?grant_type=refresh_token', { refresh_token: s.refresh_token });
+        const ns = await this.storeSession(json);
+        return ns.access_token;
+      } catch (e) {
+        if (/reach the cloud/.test(e.message)) throw e;
+        await Store.setMeta('session', null);
+        throw Object.assign(new Error('Your cloud sign-in expired. Sign in again on the Data tab. Entries are safe on this phone.'), { auth: true });
+      }
+    },
+    async rest(method, query, body, extraHeaders, retried) {
+      const tok = await this.token();
+      let res;
+      try {
+        res = await fetch(this.base() + '/rest/v1/records' + query, {
+          method,
+          headers: Object.assign({ 'apikey': this.cfg().key, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' }, extraHeaders || {}),
+          body: body ? JSON.stringify(body) : undefined
+        });
+      } catch (e) { throw new Error('No connection to the cloud right now.'); }
+      if (res.status === 401 && !retried) { await this.token(true); return this.rest(method, query, body, extraHeaders, true); }
+      if (!res.ok) {
+        let msg = 'Cloud error ' + res.status;
+        try { const j = await res.json(); msg = j.message || j.msg || msg; if (j.code === '42P01' || /relation .* does not exist|Could not find the table/i.test(msg)) msg = 'The cloud table is missing. Run the setup SQL in Supabase (see the setup guide).'; } catch (e) { /* ignore */ }
+        throw new Error(msg);
+      }
+      if (method === 'GET') return res.json();
+      return null;
+    },
+    async pullAll() {
+      const rows = [];
+      for (let offset = 0; ; offset += 1000) {
+        const page = await this.rest('GET', '?select=*&order=id.asc&limit=1000&offset=' + offset);
+        rows.push(...page);
+        if (page.length < 1000) break;
+      }
+      return rows;
+    },
+    async sync() {
+      if (!this.configured()) { this.set('local', 'Saved on this phone only. Cloud backup is not set up.'); return; }
+      if (!this.signedIn()) { this.set('signed-out', 'Saved on this phone. Sign in to the cloud to sync.'); return; }
+      if (this.busy) { this.again = true; return; }
+      this.busy = true;
+      this.set('syncing', 'Syncing…');
+      try {
+        const remote = await this.pullAll();
+        const puts = Core.mergeRemote(Store.records, remote);
+        await Store.putMany(puts);
+        const dirty = Store.list().filter(r => r.dirty && !r.demo);
+        const userId = this.session().user.id;
+        for (let i = 0; i < dirty.length; i += 200) {
+          const batch = dirty.slice(i, i + 200);
+          await this.rest('POST', '?on_conflict=id', batch.map(r => Core.toRemote(r, userId)), { 'Prefer': 'resolution=merge-duplicates,return=minimal' });
+          // Only clear the flag if the record wasn't edited again while uploading.
+          const done = batch.map(r => Store.records.get(r.id)).filter(cur => cur && cur.updatedAt === batch.find(b => b.id === cur.id).updatedAt)
+            .map(cur => Object.assign({}, cur, { dirty: false }));
+          await Store.putMany(done);
+        }
+        await Store.setMeta('lastSync', new Date().toISOString());
+        const left = Store.list().filter(r => r.dirty && !r.demo).length;
+        this.set(left ? 'pending' : 'synced', left ? left + ' change(s) waiting to sync' : 'Saved on this phone and in the cloud.');
+        return { pulled: puts.length };
+      } catch (e) {
+        const pending = Store.list().filter(r => r.dirty && !r.demo).length;
+        this.set(e.auth ? 'signed-out' : 'error', e.message + (pending ? ' ' + pending + ' change(s) are saved on this phone and will sync later.' : ''));
+      } finally {
+        this.busy = false;
+        if (this.again) { this.again = false; setTimeout(() => this.sync(), 50); }
+      }
+    },
+    async deleteAllRemote() {
+      const s = this.session();
+      if (!s) throw new Error('Not signed in to the cloud');
+      await this.rest('DELETE', '?user_id=eq.' + encodeURIComponent(s.user.id), null, { 'Prefer': 'return=minimal' });
+    }
+  };
+
+  root.Store = Store;
+  root.Cloud = Cloud;
+})(this);
+</script>
+<script>/* Small SVG chart renderers. Colours are passed in resolved (not CSS vars)
+   so the same SVG can be saved as a PNG image. */
+(function (root) {
+  'use strict';
+  const C = root.Core;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function geom(width, height, from, to) {
+    const ml = 30, mr = 10, mt = 14, mb = 40;
+    const a = C.dayNum(from), b = C.dayNum(to);
+    const span = Math.max(1, b - a);
+    const pw = width - ml - mr, ph = height - mt - mb;
+    return {
+      ml, mr, mt, mb, pw, ph, a, b, span,
+      x: n => ml + (n - a) / span * pw,
+      y: v => mt + ph - v / 10 * ph,
+      n: px => Math.round(a + (px - ml) / pw * span)
+    };
+  }
+
+  function xTicks(g) {
+    const ticks = [];
+    if (g.span <= 45) {
+      const step = g.span <= 14 ? 2 : 7;
+      for (let n = g.a; n <= g.b; n += step) ticks.push({ n, label: C.fmtDay(C.dayStr(n)) });
+    } else {
+      const every = g.span <= 220 ? 1 : g.span <= 500 ? 2 : 3;
+      let mk = C.monthKey(C.dayStr(g.a));
+      let i = 0;
+      while (true) {
+        const n = C.dayNum(C.monthStart(mk));
+        if (n > g.b) break;
+        if (n >= g.a && i % every === 0) {
+          const [y, m] = mk.split('-').map(Number);
+          ticks.push({ n, label: C.MONTHS[m - 1] + (m === 1 ? ' ' + String(y).slice(2) : '') });
+        }
+        if (n >= g.a) i++;
+        const [y, m] = mk.split('-').map(Number);
+        mk = m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0');
+      }
+    }
+    return ticks;
+  }
+
+  function lineChart(o) {
+    const { width, height, from, to, series, bands, markers, logged, selected, col } = o;
+    const g = geom(width, height, from, to);
+    const parts = [];
+    parts.push(`<rect x="0" y="0" width="${width}" height="${height}" fill="${col.surface}"/>`);
+    // bleeding bands
+    for (const [s, e] of (bands || [])) {
+      const x1 = g.x(Math.max(s, g.a) - 0.5), x2 = g.x(Math.min(e, g.b) + 0.5);
+      if (x2 <= g.ml || x1 >= g.ml + g.pw) continue;
+      parts.push(`<rect x="${Math.max(g.ml, x1).toFixed(1)}" y="${g.mt}" width="${(Math.min(g.ml + g.pw, x2) - Math.max(g.ml, x1)).toFixed(1)}" height="${g.ph}" fill="${col.band}"/>`);
+    }
+    // grid + y labels
+    for (const v of [0, 5, 10]) {
+      const y = g.y(v).toFixed(1);
+      parts.push(`<line x1="${g.ml}" x2="${g.ml + g.pw}" y1="${y}" y2="${y}" stroke="${v === 0 ? col.axis : col.grid}" stroke-width="1"/>`);
+      parts.push(`<text x="${g.ml - 8}" y="${+y + 4}" text-anchor="end" font-size="11" fill="${col.muted}">${v}</text>`);
+    }
+    // x ticks
+    for (const t of xTicks(g)) {
+      const x = g.x(t.n).toFixed(1);
+      parts.push(`<line x1="${x}" x2="${x}" y1="${g.mt + g.ph}" y2="${g.mt + g.ph + 4}" stroke="${col.axis}"/>`);
+      parts.push(`<text x="${x}" y="${g.mt + g.ph + 16}" text-anchor="middle" font-size="11" fill="${col.muted}">${esc(t.label)}</text>`);
+    }
+    // logging coverage row
+    const cy = g.mt + g.ph + 24;
+    const cw = Math.max(1.5, g.pw / (g.span + 1) - 0.5);
+    parts.push(`<text x="${g.ml - 8}" y="${cy + 6}" text-anchor="end" font-size="9" fill="${col.muted}">log</text>`);
+    parts.push(`<rect x="${g.ml}" y="${cy}" width="${g.pw}" height="7" rx="2" fill="${col.grid}"/>`);
+    for (const n of (logged || [])) {
+      if (n < g.a || n > g.b) continue;
+      parts.push(`<rect x="${(g.x(n) - cw / 2).toFixed(1)}" y="${cy}" width="${cw.toFixed(1)}" height="7" fill="${col.logged}"/>`);
+    }
+    // markers (notes, medication changes)
+    for (const m of (markers || [])) {
+      if (m.n < g.a || m.n > g.b) continue;
+      const x = g.x(m.n);
+      parts.push(`<path d="M${(x - 4).toFixed(1)} 2 L${(x + 4).toFixed(1)} 2 L${x.toFixed(1)} 9 Z" fill="${col.marker}"><title>${esc(m.label)}</title></path>`);
+    }
+    // selected day
+    if (selected !== undefined && selected !== null && selected >= g.a && selected <= g.b) {
+      const x = g.x(selected).toFixed(1);
+      parts.push(`<line x1="${x}" x2="${x}" y1="${g.mt}" y2="${g.mt + g.ph}" stroke="${col.text}" stroke-width="1" stroke-dasharray="3 3"/>`);
+    }
+    // series: lines join consecutive calendar days only
+    series.forEach(s => {
+      const pts = s.points.filter(p => p.value !== null);
+      let d = '';
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i], prev = pts[i - 1];
+        const cmd = prev && p.n - prev.n === 1 ? 'L' : 'M';
+        d += cmd + g.x(p.n).toFixed(1) + ' ' + g.y(p.value).toFixed(1) + ' ';
+      }
+      if (d) parts.push(`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ` stroke-dasharray="${s.dash}"` : ''}/>`);
+      for (const p of pts) {
+        const x = g.x(p.n).toFixed(1), y = g.y(p.value).toFixed(1);
+        if (p.implied) parts.push(`<circle cx="${x}" cy="${y}" r="3.5" fill="${col.surface}" stroke="${s.color}" stroke-width="1.5"/>`);
+        else parts.push(`<circle cx="${x}" cy="${y}" r="4" fill="${s.color}" stroke="${col.surface}" stroke-width="1.5"/>`);
+      }
+    });
+    if (o.emptyText) parts.push(`<text x="${g.ml + g.pw / 2}" y="${g.mt + g.ph / 2}" text-anchor="middle" font-size="13" fill="${col.muted}">${esc(o.emptyText)}</text>`);
+    const title = o.title ? `<title>${esc(o.title)}</title>` : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="-apple-system, system-ui, sans-serif" role="img">${title}${parts.join('')}</svg>`;
+  }
+
+  function barChart(o) {
+    const { width, height, items, col } = o; // items: {label, value|null, sub}
+    const ml = 26, mr = 6, mt = 18, mb = 34;
+    const pw = width - ml - mr, ph = height - mt - mb;
+    const y = v => mt + ph - v / 10 * ph;
+    const parts = [`<rect x="0" y="0" width="${width}" height="${height}" fill="${col.surface}"/>`];
+    for (const v of [0, 5, 10]) {
+      parts.push(`<line x1="${ml}" x2="${ml + pw}" y1="${y(v)}" y2="${y(v)}" stroke="${v === 0 ? col.axis : col.grid}"/>`);
+      parts.push(`<text x="${ml - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="${col.muted}">${v}</text>`);
+    }
+    const n = items.length || 1;
+    const slot = pw / n, bw = Math.min(28, slot * 0.6);
+    items.forEach((it, i) => {
+      const cx = ml + slot * (i + 0.5);
+      if (it.value !== null && it.value !== undefined) {
+        const top = y(it.value), h = Math.max(0, mt + ph - top);
+        const r = Math.min(4, h);
+        parts.push(`<path d="M${cx - bw / 2} ${mt + ph} V${top + r} Q${cx - bw / 2} ${top} ${cx - bw / 2 + r} ${top} H${cx + bw / 2 - r} Q${cx + bw / 2} ${top} ${cx + bw / 2} ${top + r} V${mt + ph} Z" fill="${col.bar}"/>`);
+        parts.push(`<text x="${cx}" y="${top - 5}" text-anchor="middle" font-size="11" fill="${col.text}">${it.value.toFixed(1)}</text>`);
+      } else {
+        parts.push(`<text x="${cx}" y="${mt + ph - 6}" text-anchor="middle" font-size="10" fill="${col.muted}">no data</text>`);
+      }
+      parts.push(`<text x="${cx}" y="${mt + ph + 14}" text-anchor="middle" font-size="11" fill="${col.text}">${esc(it.label)}</text>`);
+      parts.push(`<text x="${cx}" y="${mt + ph + 27}" text-anchor="middle" font-size="9.5" fill="${col.muted}">${esc(it.sub || '')}</text>`);
+    });
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="-apple-system, system-ui, sans-serif" role="img"><title>${esc(o.title || '')}</title>${parts.join('')}</svg>`;
+  }
+
+  // SVG string -> PNG Blob (2x)
+  function svgToPng(svg, width, height) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = width * 2; c.height = height * 2;
+        const ctx = c.getContext('2d');
+        ctx.scale(2, 2);
+        ctx.drawImage(img, 0, 0, width, height);
+        c.toBlob(b => b ? resolve(b) : reject(new Error('Could not create image')), 'image/png');
+      };
+      img.onerror = () => reject(new Error('Could not draw image'));
+      img.src = url;
+    });
+  }
+
+  root.Charts = { lineChart, barChart, geom, svgToPng };
+})(this);
+</script>
+<script>/* Estelle's tracker: UI */
+(function () {
+  'use strict';
+  const C = window.Core, Store = window.Store, Cloud = window.Cloud, Charts = window.Charts;
+
+  // ---------- helpers ----------
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
+  const esc = s => String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+  const today = () => C.todayStr();
+  const nowTime = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fmtDate = d => { const n = C.dayNum(d), t = C.dayNum(today()); if (n === t) return 'Today'; if (n === t - 1) return 'Yesterday'; return weekday(d) + ' ' + C.fmtDay(d, d.slice(0, 4) !== today().slice(0, 4)); };
+  const weekday = d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(C.dayNum(d) * 86400000).getUTCDay()];
+  const fmtStamp = iso => { if (!iso) return ''; const d = new Date(iso); return C.fmtDay(C.todayStr(d), true) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const lsGet = (k, def) => { try { const v = localStorage.getItem('etr.' + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } };
+  const lsSet = (k, v) => { try { localStorage.setItem('etr.' + k, JSON.stringify(v)); } catch (e) { /* not essential */ } };
+
+  const ICON = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>',
+    history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    graph: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M5 15l4-5 4 3 6-7"/></svg>',
+    pattern: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>',
+    data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    drop: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+    pill: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="M9.5 8.3l5 7.4"/></svg>',
+    calm: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 10h.01M15 10h.01"/></svg>'
+  };
+
+  // ---------- state ----------
+  const S = Object.assign({
+    tab: 'home',
+    range: { preset: '90', from: null, to: null },
+    aKeys: ['pelvic', 'ovary_r', 'ovary_l'], aSlots: {},
+    bMood: ['low_mood', 'anxiety'], bMoodSlots: {},
+    bPhys: ['pelvic', 'bloating', 'fatigue', 'nausea'], bPhysSlots: {},
+    cTarget: 'all',
+    pRange: 'all',
+    hist: { q: '', kind: 'all', order: 'desc' }
+  }, lsGet('ui', {}));
+  S.sel = { a: null, b: null };
+  S.histLimit = 60;
+  const saveUI = () => lsSet('ui', { tab: S.tab, range: S.range, aKeys: S.aKeys, aSlots: S.aSlots, bMood: S.bMood, bMoodSlots: S.bMoodSlots, bPhys: S.bPhys, bPhysSlots: S.bPhysSlots, cTarget: S.cTarget, pRange: S.pRange, hist: S.hist });
+
+  const settings = () => Object.assign({ name: 'Estelle', dienogestDose: '', showDemo: true }, Store.meta.settings || {});
+  const recs = () => C.active(Store.list(), settings().showDemo);
+  const hasDemo = () => Store.list().some(r => r.demo);
+
+  function rangeDates() {
+    const t = today();
+    const r = S.range;
+    if (r.preset === 'custom' && r.from && r.to) return r.from <= r.to ? [r.from, r.to] : [r.to, r.from];
+    const days = { '30': 29, '90': 89, '180': 182, '365': 364 }[r.preset] || 89;
+    return [C.addDays(t, -days), t];
+  }
+
+  function assignSlots(keys, slots) {
+    const used = new Set(keys.filter(k => slots[k] !== undefined).map(k => slots[k]));
+    for (const k of Object.keys(slots)) if (!keys.includes(k)) delete slots[k];
+    for (const k of keys) if (slots[k] === undefined) { let s = 0; while (used.has(s)) s++; slots[k] = s; used.add(s); }
+    return slots;
+  }
+  const seriesColor = slot => css('--series-' + (slot % 8 + 1));
+  const chartColors = () => ({ surface: css('--chart-surface'), grid: css('--chart-grid'), axis: css('--chart-axis'), muted: css('--chart-muted'), text: css('--text'), band: css('--chart-band'), logged: css('--chart-logged'), marker: css('--chart-marker'), bar: css('--chart-bar') });
+
+  // ---------- toast ----------
+  let toastTimer;
+  function toast(msg, action) {
+    let t = $('#toast');
+    if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button type="button" id="toast-act">${esc(action.label)}</button>` : '');
+    t.classList.remove('hidden');
+    if (action) $('#toast-act').onclick = () => { t.classList.add('hidden'); action.fn(); };
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.add('hidden'), action ? 6000 : 3000);
+  }
+
+  // ---------- sheet ----------
+  let sheetState = null;
+  function openSheet({ title, body, footer, onClose, isDirty }) {
+    closeSheet(true);
+    const tt = $('#toast'); if (tt) tt.classList.add('hidden');
+    const wrap = document.createElement('div');
+    wrap.className = 'sheet-wrap';
+    wrap.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet-h"><h2>${esc(title)}</h2><button class="icon-btn" data-act="sheet-close" aria-label="Close">${ICON.close}</button></div>
+      <div class="sheet-b" id="sheet-b">${body}</div>
+      ${footer ? `<div class="sheet-f" id="sheet-f">${footer}</div>` : ''}
+    </div>`;
+    document.body.appendChild(wrap);
+    document.body.style.overflow = 'hidden';
+    sheetState = { wrap, onClose, isDirty };
+    return wrap;
+  }
+  function closeSheet(force) {
+    if (!sheetState) return true;
+    if (!force && sheetState.isDirty && sheetState.isDirty() && !confirm('Close without saving? Your changes will be lost.')) return false;
+    sheetState.wrap.remove();
+    document.body.style.overflow = '';
+    const cb = sheetState.onClose;
+    sheetState = null;
+    if (cb) cb();
+    return true;
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    const app = $('#app');
+    const banners = renderBanners();
+    let html = '';
+    if (S.tab === 'home') html = renderHome();
+    else if (S.tab === 'history') html = renderHistory();
+    else if (S.tab === 'graphs') html = renderGraphs();
+    else if (S.tab === 'patterns') html = renderPatterns();
+    else if (S.tab === 'data') html = renderData();
+    app.innerHTML = banners + html;
+    renderTabbar();
+    requestAnimationFrame(drawCharts);
+  }
+
+  function renderTabbar() {
+    const tabs = [['home', 'Overview', ICON.home], ['history', 'History', ICON.history], ['log', 'Log', ICON.plus], ['graphs', 'Graphs', ICON.graph], ['patterns', 'Patterns', ICON.pattern], ['data', 'Data', ICON.data]];
+    $('#tabbar').innerHTML = `<div class="tabbar-in">${tabs.map(([id, label, ic]) => id === 'log'
+      ? `<button class="tab log" data-act="log" aria-label="Log symptoms"><span class="circle">${ic}</span>Log</button>`
+      : `<button class="tab" data-act="tab" data-tab="${id}" ${S.tab === id ? 'aria-current="page"' : ''}>${ic}${label}</button>`).join('')}</div>`;
+  }
+
+  function syncPill() {
+    const st = Cloud.status;
+    const map = { synced: ['ok', 'Synced'], pending: ['warn', 'Waiting to sync'], syncing: ['', 'Syncing…'], error: ['err', 'Sync problem'], 'signed-out': ['warn', 'Cloud: signed out'], local: ['warn', 'Phone only'] };
+    const [cls, label] = map[st.state] || ['', st.state];
+    return `<button class="pill ${cls}" data-act="tab" data-tab="data" title="${esc(st.message)}"><span class="dot"></span>${label}</button>`;
+  }
+
+  function renderBanners() {
+    let h = '';
+    if (Store.failed) h += `<div class="banner err">Storage on this phone could not be opened: ${esc(Store.failed)}. Entries cannot be saved until this is fixed. Try closing other tabs of this app, or check Safari isn't in Private mode.</div>`;
+    if (hasDemo()) h += `<div class="banner warn"><span><span class="demo-tag">DEMO</span> Demonstration data is ${settings().showDemo ? 'showing' : 'stored but hidden'}. It's kept separate from real entries.</span><button class="link-btn" data-act="tab" data-tab="data">Manage</button></div>`;
+    if (Cloud.status.state === 'error' || Cloud.status.state === 'signed-out') {
+      if (Cloud.configured()) h += `<div class="banner ${Cloud.status.state === 'error' ? 'err' : 'warn'}"><span>${esc(Cloud.status.message)}</span><button class="link-btn" data-act="tab" data-tab="data">Fix</button></div>`;
+    }
+    return h;
+  }
+
+  // ---------- Overview ----------
+  function renderHome() {
+    const st = settings();
+    const h = new Date().getHours();
+    const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const all = recs();
+    const { days } = C.buildDays(all);
+    const t = today();
+    const bleed = C.bleedingDaySet(all, t);
+    let cells = '', labels = '';
+    for (let i = 13; i >= 0; i--) {
+      const d = C.addDays(t, -i);
+      const day = days.get(d);
+      const g = C.dayGroupValue(day, null);
+      let cls = 'cell', style = '', title;
+      if (!day) { cls += ' unk'; title = 'Not logged (unknown)'; }
+      else if (typeof g.value === 'number') { const b = g.value === 0 ? 0 : Math.min(5, Math.ceil(g.value / 2)); style = `background:var(--seq-${b})`; title = 'Highest score ' + g.value; }
+      else { style = 'background:var(--seq-1)'; title = 'Logged, not scored'; }
+      if (i === 0) cls += ' today';
+      cells += `<button class="${cls}" style="${style}" data-act="day" data-date="${d}" aria-label="${esc(fmtDate(d) + ': ' + title)}" title="${esc(title)}">${bleed.has(C.dayNum(d)) ? '<span class="bl"></span>' : ''}</button>`;
+      labels += `<span>${i % 2 === 1 ? '' : weekday(d).slice(0, 1)}</span>`;
+    }
+    const recent = all.filter(r => r.kind === 'entry' || r.kind === 'bleeding' || r.kind === 'med' || r.kind === 'note')
+      .sort((a, b) => sortKey(b).localeCompare(sortKey(a))).slice(0, 3);
+    const ongoing = all.filter(r => r.kind === 'bleeding' && !r.data.endDate);
+    const standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const lastBackup = Store.meta.lastBackup;
+    const needBackup = !Cloud.signedIn() && all.some(r => !r.demo) && (!lastBackup || Date.now() - Date.parse(lastBackup) > 30 * 86400000);
+    return `
+      <div class="screen-head"><div><h1>${greet}, ${esc(st.name || 'Estelle')}</h1><p class="small">${esc(weekday(t) + ' ' + C.fmtDay(t, true))}</p></div>${syncPill()}</div>
+      ${isIOS && !standalone ? `<div class="banner info"><span>Add this app to your Home Screen: tap <b>Share</b>, then <b>Add to Home Screen</b>. Then always open it from that icon. Safari tabs keep their own separate copy of the data.</span></div>` : ''}
+      ${needBackup ? `<div class="banner warn"><span>${lastBackup ? 'Your last backup was over a month ago.' : 'Your entries are only on this phone.'} Set up the cloud or save a backup.</span><button class="link-btn" data-act="tab" data-tab="data">Back up</button></div>` : ''}
+      <button class="btn btn-primary btn-block btn-big" data-act="log">${ICON.plus.replace('<svg', '<svg width="24" height="24"')} Log symptoms</button>
+      <div class="quick">
+        <button class="btn" data-act="no-symptoms">${ICON.calm}No significant symptoms today</button>
+        <button class="btn" data-act="bleeding">${ICON.drop}Log bleeding</button>
+        <button class="btn" data-act="med">${ICON.pill}Log medication</button>
+      </div>
+      ${ongoing.map(r => `<div class="banner info" style="margin-top:14px"><span>Bleeding logged since ${esc(C.fmtDay(r.data.startDate, true))} (${esc(r.data.type || 'type not set')}).</span><button class="link-btn" data-act="edit" data-id="${r.id}">Update</button></div>`).join('')}
+      <div class="card" style="margin-top:14px">
+        <div class="card-head"><h2>Last 14 days</h2><button class="link-btn" data-act="tab" data-tab="graphs">Graphs</button></div>
+        <div class="strip">${cells}</div>
+        <div class="strip-labels">${labels}</div>
+        <div class="legend"><span><span class="box" style="background:var(--seq-0)"></span>0</span><span><span class="box" style="background:var(--seq-2)"></span>3–4</span><span><span class="box" style="background:var(--seq-4)"></span>7–8</span><span><span class="box" style="border:1.5px dashed var(--line)"></span>not logged</span><span><span class="box" style="background:var(--series-8);border-radius:50%;width:8px;height:8px"></span>bleeding</span></div>
+        <p class="small" style="margin:8px 0 0">Each square shows the highest score recorded that day. Tap a day to see or add entries.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Recent</h2><button class="link-btn" data-act="tab" data-tab="history">See all</button></div>
+        ${recent.length ? recent.map(itemCard).join('') : `<p class="small">Nothing logged yet. When something comes up, tap <b>Log symptoms</b>. There's no daily check-in to keep up with.</p>`}
+      </div>`;
+  }
+
+  // ---------- items ----------
+  function sortKey(r) {
+    const d = r.data || {};
+    const date = r.kind === 'bleeding' ? d.startDate : d.date;
+    return (date || '') + 'T' + (d.time || '') + '|' + r.createdAt;
+  }
+  function recDate(r) { return r.kind === 'bleeding' ? r.data.startDate : r.data.date; }
+  function symTags(d) {
+    const { labels } = { labels: {} };
+    return (d.symptoms || []).map(s => {
+      const key = C.seriesKey(s);
+      const sev = s.severity === null || s.severity === undefined ? '?' : s.severity;
+      return `<span class="sym-tag">${esc(C.seriesLabel(key, s.label ? { [key]: s.label } : labels))} <b>${sev}</b></span>`;
+    }).join('');
+  }
+  const MED_EVENT = { taken: 'Taken', missed: 'Missed dose', change: 'Dose change', started: 'Started', stopped: 'Stopped' };
+  const MED_CAT = { dienogest: 'Dienogest', pain: 'Pain relief', ec: 'Emergency contraception', hormonal: 'Other hormonal', other: 'Other' };
+  function itemCard(r) {
+    const d = r.data;
+    const demo = r.demo ? ' <span class="demo-tag">DEMO</span>' : '';
+    if (r.kind === 'entry') {
+      const title = d.noSymptoms ? 'No significant symptoms' : ((d.symptoms || []).length + ' symptom' + ((d.symptoms || []).length === 1 ? '' : 's'));
+      return `<button class="item" data-act="edit" data-id="${r.id}"><div class="item-top"><span><span class="kind-ico" style="background:var(--accent)"></span>Symptoms${demo}</span><span>${esc(d.time || '')}</span></div>
+        <div class="item-title">${esc(title)}${d.duration ? ` <span class="small">· ${esc(d.duration)}</span>` : ''}</div>
+        ${d.noSymptoms ? '' : `<div class="sym-list">${symTags(d)}</div>`}
+        ${d.notes ? `<div class="note">${esc(d.notes.length > 160 ? d.notes.slice(0, 160) + '…' : d.notes)}</div>` : ''}</button>`;
+    }
+    if (r.kind === 'bleeding') {
+      return `<button class="item" data-act="edit" data-id="${r.id}"><div class="item-top"><span><span class="kind-ico" style="background:var(--series-8)"></span>Bleeding${demo}</span><span>${d.endDate ? esc(C.fmtDay(d.startDate) + ' – ' + C.fmtDay(d.endDate)) : 'ongoing'}</span></div>
+        <div class="item-title">${esc(cap(d.type || 'Type not set'))}${d.pain !== null && d.pain !== undefined && d.pain !== '' ? ` · pain ${esc(d.pain)}` : ''}</div>
+        ${d.symptoms ? `<div class="note">${esc(d.symptoms)}</div>` : ''}${d.notes ? `<div class="note">${esc(d.notes)}</div>` : ''}</button>`;
+    }
+    if (r.kind === 'med') {
+      return `<button class="item" data-act="edit" data-id="${r.id}"><div class="item-top"><span><span class="kind-ico" style="background:var(--series-7)"></span>Medication${demo}</span><span>${esc(d.time || '')}</span></div>
+        <div class="item-title">${esc(MED_EVENT[d.event] || 'Taken')}: ${esc(d.name || MED_CAT[d.category] || '')}${d.dose ? ' · ' + esc(d.dose) : ''}</div>
+        ${d.effect ? `<div class="note">Effect: ${esc(d.effect)}</div>` : ''}${d.sideEffects ? `<div class="note">Side effects: ${esc(d.sideEffects)}</div>` : ''}${d.notes ? `<div class="note">${esc(d.notes)}</div>` : ''}</button>`;
+    }
+    if (r.kind === 'note') {
+      return `<button class="item" data-act="edit" data-id="${r.id}"><div class="item-top"><span><span class="kind-ico" style="background:var(--chart-marker)"></span>${d.tag === 'pattern' ? 'Suspected pattern' : 'Note'}${demo}</span><span></span></div><div class="note" style="color:var(--text)">${esc(d.text)}</div></button>`;
+    }
+    return '';
+  }
+  const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+
+  // ---------- History ----------
+  function searchText(r) {
+    const d = r.data;
+    let s = [d.notes, d.text, d.duration, d.name, d.dose, d.effect, d.sideEffects, d.symptoms && typeof d.symptoms === 'string' ? d.symptoms : '', d.type, MED_CAT[d.category], MED_EVENT[d.event]].join(' ');
+    if (Array.isArray(d.symptoms)) s += ' ' + d.symptoms.map(x => C.seriesLabel(C.seriesKey(x), x.label ? { [C.seriesKey(x)]: x.label } : {})).join(' ');
+    if (d.noSymptoms) s += ' no significant symptoms';
+    if (d.context) s += ' ' + Object.values(d.context).join(' ');
+    return s.toLowerCase();
+  }
+  function renderHistory() {
+    const H = S.hist;
+    let list = recs();
+    if (H.kind !== 'all') list = list.filter(r => r.kind === H.kind);
+    const q = H.q.trim().toLowerCase();
+    if (q) list = list.filter(r => searchText(r).includes(q));
+    list.sort((a, b) => H.order === 'desc' ? sortKey(b).localeCompare(sortKey(a)) : sortKey(a).localeCompare(sortKey(b)));
+    const total = list.length;
+    list = list.slice(0, S.histLimit);
+    let html = '', lastDate = null;
+    for (const r of list) {
+      const d = recDate(r);
+      if (d !== lastDate) { html += `<div class="day-h">${esc(fmtDate(d))}</div>`; lastDate = d; }
+      html += itemCard(r);
+    }
+    const kinds = [['all', 'All'], ['entry', 'Symptoms'], ['bleeding', 'Bleeding'], ['med', 'Medication'], ['note', 'Notes']];
+    return `
+      <div class="screen-head"><div><h1>History</h1><p class="small">${total} record${total === 1 ? '' : 's'}${q ? ' matching' : ''}</p></div>${syncPill()}</div>
+      <input class="field" type="search" placeholder="Search symptoms, notes, medication…" value="${esc(H.q)}" data-in="hist-q" aria-label="Search history">
+      <div class="chips" style="margin-top:10px">${kinds.map(([k, l]) => `<button class="chip" data-act="hist-kind" data-kind="${k}" aria-pressed="${H.kind === k}">${l}</button>`).join('')}
+        <button class="chip" data-act="hist-order">${H.order === 'desc' ? 'Newest first ↓' : 'Oldest first ↑'}</button></div>
+      <div id="hist-list">${html || `<p class="small" style="margin-top:20px">No records${q || H.kind !== 'all' ? ' match these filters' : ' yet'}.</p>`}</div>
+      ${total > list.length ? `<button class="btn btn-block" data-act="hist-more">Show more (${total - list.length} left)</button>` : ''}`;
+  }
+
+  // ---------- Entry form ----------
+  let F = null;
+  function usualKeys() {
+    const counts = {};
+    for (const r of Store.list()) if (r.kind === 'entry' && !r.deleted && !r.demo) for (const s of (r.data.symptoms || [])) { const it = C.ITEM[s.id]; if (it && !it.custom) counts[s.id] = (counts[s.id] || 0) + 1; }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(x => x[0]);
+  }
+  function openEntry(rec, presetDate) {
+    const base = { date: presetDate || today(), time: presetDate && presetDate !== today() ? '' : nowTime(), symptoms: [], noSymptoms: false, duration: '', notes: '', context: {} };
+    const d = rec ? Object.assign(base, JSON.parse(JSON.stringify(rec.data))) : base;
+    d.context = d.context || {};
+    F = { id: rec ? rec.id : uuid(), kind: 'entry', d, isNew: !rec, rec, saving: false };
+    const usual = usualKeys();
+    const ctx = d.context;
+    const body = `
+      <div class="two"><div><label class="f" for="e-date">Date</label><input class="field" type="date" id="e-date" value="${esc(d.date)}" max="${today()}"></div>
+      <div><label class="f" for="e-time">Time (optional)</label><input class="field" type="time" id="e-time" value="${esc(d.time)}"></div></div>
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="e-none" ${d.noSymptoms ? 'checked' : ''}> No significant symptoms</label>
+      <div id="sym-area" class="${d.noSymptoms ? 'hidden' : ''}">
+        <p class="small" style="margin:6px 0 0">Tap what you're experiencing, then score each one from 0 to 10. Use <b>?</b> if you're not sure.</p>
+        ${usual.length >= 3 ? `<div class="group-h">Your usual</div><div class="chips" id="usual">${usual.map(id => chipFor(id)).join('')}</div>` : ''}
+        ${C.GROUPS.map(g => `<div class="group-h">${esc(g.label)}</div><div id="grp-${g.id}">${groupBlock(g)}</div>`).join('')}
+      </div>
+      <label class="f" for="e-duration">How long it lasted (optional)</label>
+      <input class="field" id="e-duration" value="${esc(d.duration)}" placeholder="e.g. 2 hours, all day">
+      <div class="chips" style="margin-top:8px">${['Under 1 hour', 'A few hours', 'All day', 'Several days'].map(x => `<button class="chip" type="button" data-act="dur" data-v="${x}">${x}</button>`).join('')}</div>
+      <label class="f" for="e-notes">Notes (optional)</label>
+      <textarea class="field" id="e-notes" placeholder="Anything worth remembering">${esc(d.notes)}</textarea>
+      ${rec ? `<label class="f" for="e-later">Add something you remembered later</label><textarea class="field" id="e-later" placeholder="Saved with today's date" style="min-height:60px"></textarea>` : ''}
+      <details class="more" ${Object.keys(ctx).some(k => ctx[k] !== '' && ctx[k] !== undefined && ctx[k] !== null) ? 'open' : ''}><summary>Context (optional)</summary>
+        <p class="small" style="margin-top:0">Fill in only what feels useful. Nothing here is required.</p>
+        <label class="f">Stress or anxiety level</label>${sevRow('ctx-stress', ctx.stress, false)}<div class="sev-anchors"><span>0 calm</span><span>10 extreme</span></div>
+        <div class="two" style="margin-top:14px"><div><label class="f" for="c-sleep">Sleep (hours)</label><input class="field" id="c-sleep" type="number" inputmode="decimal" min="0" max="24" step="0.5" value="${esc(ctx.sleepHours)}"></div>
+        <div><label class="f">Sleep quality</label>${segRow('ctx-sleepq', [['poor', 'Poor'], ['ok', 'OK'], ['good', 'Good']], ctx.sleepQuality)}</div></div>
+        <label class="f">Exercise or activity</label>${segRow('ctx-ex', [['none', 'None'], ['light', 'Light'], ['moderate', 'Moderate'], ['hard', 'Hard']], ctx.exercise)}
+        <input class="field" id="c-exnote" style="margin-top:8px" placeholder="What you did (optional)" value="${esc(ctx.exerciseNote)}">
+        <label class="f" for="c-move">Unusual movements or stretching</label><input class="field" id="c-move" value="${esc(ctx.movement)}">
+        <label class="f" for="c-bowel">Bowel habits</label><input class="field" id="c-bowel" value="${esc(ctx.bowel)}">
+        <label class="f">Appetite and hunger</label>${segRow('ctx-app', [['low', 'Low'], ['normal', 'Normal'], ['high', 'High']], ctx.appetite)}
+        <label class="f" for="c-food">Food or suspected triggers</label><input class="field" id="c-food" value="${esc(ctx.food)}">
+        <label class="f" for="c-ill">Illness</label><input class="field" id="c-ill" value="${esc(ctx.illness)}" placeholder="e.g. cold, stomach bug">
+        <label class="f">Sexual activity (only if you want to record it)</label>${segRow('ctx-sex', [['yes', 'Yes'], ['no', 'No']], ctx.sex)}
+        <label class="f" for="c-life">Work stress or life events</label><input class="field" id="c-life" value="${esc(ctx.lifeEvents)}">
+        <label class="f" for="c-other">Other medication or events</label><input class="field" id="c-other" value="${esc(ctx.other)}">
+      </details>
+      ${rec ? `<p class="small" style="margin-top:18px">Created ${esc(fmtStamp(rec.createdAt))} · last saved ${esc(fmtStamp(rec.updatedAt))}</p>` : ''}`;
+    const footer = `<div class="save-msg hidden" id="save-msg" role="alert"></div><div class="row">${rec ? '<button class="btn btn-danger" data-act="delete" style="flex:0 0 auto">Delete</button>' : ''}<button class="btn btn-primary" data-act="save-entry">Save</button></div>`;
+    openSheet({ title: rec ? 'Edit entry' : 'Log symptoms', body, footer });
+    F.orig = JSON.stringify(readEntryForm());
+    sheetState.isDirty = () => F && !F.saved && JSON.stringify(readEntryForm()) !== F.orig;
+  }
+  function chipFor(id) {
+    const on = F.d.symptoms.some(s => s.id === id);
+    return `<button class="chip" type="button" data-act="sym" data-id="${id}" aria-pressed="${on}">${esc(C.ITEM[id].label)}</button>`;
+  }
+  function groupBlock(g) {
+    const sel = F.d.symptoms.filter(s => C.ITEM[s.id] && C.ITEM[s.id].group === g.id);
+    const rows = sel.map(s => {
+      const it = C.ITEM[s.id];
+      const [lo, hi] = C.scaleFor(s.id);
+      return `<div class="sym-row" data-row="${s.id}"><div class="sym-row-h"><span>${esc(it.label)}</span><button class="link-btn" type="button" data-act="sym" data-id="${s.id}" aria-label="Remove ${esc(it.label)}">Remove</button></div>
+        ${it.custom ? `<input class="field" style="margin-top:8px" data-in="sym-label" data-id="${s.id}" placeholder="Describe it (e.g. shoulder pain)" value="${esc(s.label || '')}">` : ''}
+        ${sevRow('sev-' + s.id, s.severity, true)}
+        <div class="sev-anchors"><span>0 ${esc(lo)}</span><span>10 ${esc(hi)}</span></div></div>`;
+    }).join('');
+    const chips = g.items.filter(it => !sel.some(s => s.id === it.id)).map(it => chipFor(it.id)).join('');
+    return rows + (chips ? `<div class="chips" style="margin-top:${rows ? 10 : 0}px">${chips}</div>` : '');
+  }
+  function sevRow(name, val, withUnknown) {
+    let h = `<div class="sev" role="group" data-sev="${name}">`;
+    for (let i = 0; i <= 10; i++) h += `<button type="button" data-act="sev" data-name="${name}" data-v="${i}" aria-pressed="${val !== null && val !== undefined && val !== '' && Number(val) === i}" aria-label="${i}">${i}</button>`;
+    h += withUnknown ? `<button type="button" data-act="sev" data-name="${name}" data-v="?" aria-pressed="${val === null || val === undefined}" aria-label="Not sure / not rated">?</button>` : `<button type="button" data-act="sev" data-name="${name}" data-v="" aria-pressed="${val === '' || val === undefined || val === null}" aria-label="Not recorded">–</button>`;
+    return h + '</div>';
+  }
+  function segRow(name, opts, val) {
+    return `<div class="seg" data-seg="${name}">${opts.map(([v, l]) => `<button type="button" data-act="seg" data-name="${name}" data-v="${v}" aria-pressed="${val === v}">${l}</button>`).join('')}</div>`;
+  }
+  function segVal(name) { const b = $(`[data-seg="${name}"] [aria-pressed="true"]`); return b ? b.dataset.v : ''; }
+  function sevVal(name) { const b = $(`[data-sev="${name}"] [aria-pressed="true"]`); if (!b) return ''; return b.dataset.v === '?' ? null : b.dataset.v === '' ? '' : Number(b.dataset.v); }
+  function readEntryForm() {
+    const d = F.d;
+    const out = {
+      date: $('#e-date').value, time: $('#e-time').value,
+      noSymptoms: $('#e-none').checked,
+      symptoms: $('#e-none').checked ? [] : d.symptoms.map(s => { const o = { id: s.id, severity: s.severity === undefined ? null : s.severity }; if (C.ITEM[s.id].custom) o.label = (s.label || '').trim(); return o; }),
+      duration: $('#e-duration').value.trim(), notes: $('#e-notes').value,
+      context: {}
+    };
+    const ctx = {
+      stress: sevVal('ctx-stress'), sleepHours: $('#c-sleep').value, sleepQuality: segVal('ctx-sleepq'), exercise: segVal('ctx-ex'), exerciseNote: $('#c-exnote').value.trim(),
+      movement: $('#c-move').value.trim(), bowel: $('#c-bowel').value.trim(), appetite: segVal('ctx-app'), food: $('#c-food').value.trim(), illness: $('#c-ill').value.trim(),
+      sex: segVal('ctx-sex'), lifeEvents: $('#c-life').value.trim(), other: $('#c-other').value.trim()
+    };
+    for (const k in ctx) if (ctx[k] !== '' && ctx[k] !== null && ctx[k] !== undefined) out.context[k] = k === 'sleepHours' ? Number(ctx[k]) : ctx[k];
+    const later = $('#e-later');
+    if (later && later.value.trim()) out.notes = (out.notes ? out.notes.replace(/\s+$/, '') + '\n' : '') + '[Added ' + C.fmtDay(today(), true) + '] ' + later.value.trim();
+    return out;
+  }
+  function showSaveMsg(text, kind) {
+    const m = $('#save-msg');
+    if (!m) return;
+    m.className = 'save-msg banner ' + (kind || 'err');
+    m.textContent = text;
+  }
+  async function saveRecord(kind, id, data, done) {
+    if (F && F.saving) return;
+    if (F) F.saving = true;
+    const btn = $('[data-act^="save-"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      await Store.save(kind, id, data);
+      if (F) F.saved = true;
+      closeSheet(true);
+      if (done) done();
+      render();
+      toast(Cloud.signedIn() ? 'Saved on this phone. Syncing to the cloud…' : 'Saved on this phone');
+      Cloud.sync();
+    } catch (e) {
+      showSaveMsg('Not saved: ' + (e && e.message ? e.message : 'storage error') + '. Your entry is still here, so you can try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+    } finally { if (F) F.saving = false; }
+  }
+  function saveEntry() {
+    const d = readEntryForm();
+    if (!d.date) return showSaveMsg('Choose a date.');
+    if (d.date > today()) return showSaveMsg("The date can't be in the future.");
+    if (!d.noSymptoms && !d.symptoms.length && !d.notes.trim()) return showSaveMsg("Add at least one symptom, tick 'No significant symptoms', or write a note.");
+    const unnamed = d.symptoms.find(s => C.ITEM[s.id].custom && !s.label);
+    if (unnamed) return showSaveMsg('Describe the "' + C.ITEM[unnamed.id].label + '" you selected.');
+    saveRecord('entry', F.id, d);
+  }
+
+  // ---------- Bleeding form ----------
+  function openBleeding(rec) {
+    const d = rec ? JSON.parse(JSON.stringify(rec.data)) : { startDate: today(), endDate: '', type: '', pain: '', symptoms: '', notes: '' };
+    F = { id: rec ? rec.id : uuid(), kind: 'bleeding', d, rec };
+    const body = `
+      <p class="small">Recorded on its own, separate from any assumed cycle.</p>
+      <div class="two"><div><label class="f" for="b-start">Started</label><input class="field" type="date" id="b-start" value="${esc(d.startDate)}" max="${today()}"></div>
+      <div><label class="f" for="b-end">Ended</label><input class="field" type="date" id="b-end" value="${esc(d.endDate)}" max="${today()}" ${d.endDate ? '' : 'disabled'}></div></div>
+      <label class="check"><input type="checkbox" id="b-ongoing" ${d.endDate ? '' : 'checked'}> Still ongoing</label>
+      <label class="f">Type</label>${segRow('b-type', [['spotting', 'Spotting'], ['light', 'Light'], ['moderate', 'Moderate'], ['heavy', 'Heavy']], d.type)}
+      <label class="f">Associated pain</label>${sevRow('b-pain', d.pain, false)}<div class="sev-anchors"><span>0 no pain</span><span>10 worst imaginable</span></div>
+      <label class="f" for="b-sym">Other symptoms with it</label><input class="field" id="b-sym" value="${esc(d.symptoms)}" placeholder="e.g. cramping, clots">
+      <label class="f" for="b-notes">Notes about unusual bleeding</label><textarea class="field" id="b-notes">${esc(d.notes)}</textarea>
+      ${rec ? `<p class="small" style="margin-top:18px">Created ${esc(fmtStamp(rec.createdAt))} · last saved ${esc(fmtStamp(rec.updatedAt))}</p>` : ''}`;
+    const footer = `<div class="save-msg hidden" id="save-msg" role="alert"></div><div class="row">${rec ? '<button class="btn btn-danger" data-act="delete" style="flex:0 0 auto">Delete</button>' : ''}<button class="btn btn-primary" data-act="save-bleeding">Save</button></div>`;
+    openSheet({ title: rec ? 'Edit bleeding' : 'Log bleeding', body, footer });
+    F.orig = JSON.stringify(readBleeding());
+    sheetState.isDirty = () => F && !F.saved && JSON.stringify(readBleeding()) !== F.orig;
+  }
+  function readBleeding() {
+    const ongoing = $('#b-ongoing').checked;
+    return { startDate: $('#b-start').value, endDate: ongoing ? '' : $('#b-end').value, type: segVal('b-type'), pain: sevVal('b-pain'), symptoms: $('#b-sym').value.trim(), notes: $('#b-notes').value };
+  }
+  function saveBleeding() {
+    const d = readBleeding();
+    if (!d.startDate) return showSaveMsg('Choose the start date.');
+    if (!$('#b-ongoing').checked && !d.endDate) return showSaveMsg("Choose the end date, or tick 'Still ongoing'.");
+    if (d.endDate && d.endDate < d.startDate) return showSaveMsg('The end date is before the start date.');
+    saveRecord('bleeding', F.id, d);
+  }
+
+  // ---------- Medication form ----------
+  function openMed(rec, preset) {
+    const st = settings();
+    const d = rec ? JSON.parse(JSON.stringify(rec.data)) : Object.assign({ date: today(), time: nowTime(), category: 'pain', event: 'taken', name: '', dose: '', effect: '', sideEffects: '', notes: '' }, preset || {});
+    if (!rec && d.category === 'dienogest') { d.name = d.name || 'Dienogest'; d.dose = d.dose || st.dienogestDose; }
+    F = { id: rec ? rec.id : uuid(), kind: 'med', d, rec };
+    const body = `
+      <label class="f">Type</label>
+      <div class="chips">${Object.entries(MED_CAT).map(([k, l]) => `<button class="chip" type="button" data-act="medcat" data-v="${k}" aria-pressed="${d.category === k}">${l}</button>`).join('')}</div>
+      <label class="f">What happened</label>${segRow('m-event', [['taken', 'Taken'], ['missed', 'Missed'], ['change', 'Dose change'], ['started', 'Started'], ['stopped', 'Stopped']], d.event)}
+      <div class="two" style="margin-top:4px"><div><label class="f" for="m-name">Name</label><input class="field" id="m-name" value="${esc(d.name)}" placeholder="e.g. ibuprofen"></div>
+      <div><label class="f" for="m-dose" id="m-dose-l">${d.event === 'change' ? 'New dose' : 'Dose'}</label><input class="field" id="m-dose" value="${esc(d.dose)}" placeholder="e.g. 2 mg"></div></div>
+      <div class="two"><div><label class="f" for="m-date">Date</label><input class="field" type="date" id="m-date" value="${esc(d.date)}" max="${today()}"></div>
+      <div><label class="f" for="m-time">Time (optional)</label><input class="field" type="time" id="m-time" value="${esc(d.time)}"></div></div>
+      <label class="f" for="m-effect">Effect you noticed (optional)</label><input class="field" id="m-effect" value="${esc(d.effect)}" placeholder="e.g. eased pain after ~1 hour">
+      <label class="f" for="m-side">Side effects you noticed (optional)</label><input class="field" id="m-side" value="${esc(d.sideEffects)}">
+      <label class="f" for="m-notes">Notes</label><textarea class="field" id="m-notes">${esc(d.notes)}</textarea>
+      <p class="small" style="margin-top:14px">This log is for your own records and for conversations with your doctor. It never suggests changing your medication.</p>
+      ${rec ? `<p class="small">Created ${esc(fmtStamp(rec.createdAt))} · last saved ${esc(fmtStamp(rec.updatedAt))}</p>` : ''}`;
+    const footer = `<div class="save-msg hidden" id="save-msg" role="alert"></div><div class="row">${rec ? '<button class="btn btn-danger" data-act="delete" style="flex:0 0 auto">Delete</button>' : ''}<button class="btn btn-primary" data-act="save-med">Save</button></div>`;
+    openSheet({ title: rec ? 'Edit medication' : 'Log medication', body, footer });
+    F.orig = JSON.stringify(readMed());
+    sheetState.isDirty = () => F && !F.saved && JSON.stringify(readMed()) !== F.orig;
+  }
+  function readMed() {
+    const cat = $('[data-act="medcat"][aria-pressed="true"]');
+    return { category: cat ? cat.dataset.v : 'other', event: segVal('m-event') || 'taken', name: $('#m-name').value.trim(), dose: $('#m-dose').value.trim(), date: $('#m-date').value, time: $('#m-time').value, effect: $('#m-effect').value.trim(), sideEffects: $('#m-side').value.trim(), notes: $('#m-notes').value };
+  }
+  async function saveMed() {
+    const d = readMed();
+    if (!d.date) return showSaveMsg('Choose a date.');
+    if (!d.name && d.category !== 'dienogest') return showSaveMsg('Add the medication name.');
+    if (d.category === 'dienogest' && !d.name) d.name = 'Dienogest';
+    if (d.category === 'dienogest' && (d.event === 'change' || d.event === 'started') && d.dose) {
+      try { await Store.setMeta('settings', Object.assign(settings(), { dienogestDose: d.dose })); } catch (e) { /* not critical */ }
+    }
+    saveRecord('med', F.id, d);
+  }
+
+  // ---------- Note form ----------
+  function openNote(rec, preset) {
+    const d = rec ? JSON.parse(JSON.stringify(rec.data)) : Object.assign({ date: today(), tag: 'pattern', text: '' }, preset || {});
+    F = { id: rec ? rec.id : uuid(), kind: 'note', d, rec };
+    const body = `
+      <p class="small">Use this to mark something you've noticed, such as a suspected recurring pattern. It shows as a small marker on Graph A. It doesn't change any calculations.</p>
+      <label class="f" for="n-date">Date</label><input class="field" type="date" id="n-date" value="${esc(d.date)}" max="${today()}">
+      <label class="f">Kind</label>${segRow('n-tag', [['pattern', 'Suspected pattern'], ['general', 'General note']], d.tag)}
+      <label class="f" for="n-text">Note</label><textarea class="field" id="n-text" placeholder="e.g. Low mood seems to come back every few weeks">${esc(d.text)}</textarea>`;
+    const footer = `<div class="save-msg hidden" id="save-msg" role="alert"></div><div class="row">${rec ? '<button class="btn btn-danger" data-act="delete" style="flex:0 0 auto">Delete</button>' : ''}<button class="btn btn-primary" data-act="save-note">Save</button></div>`;
+    openSheet({ title: rec ? 'Edit note' : 'Add a note', body, footer });
+    F.orig = JSON.stringify(readNote());
+    sheetState.isDirty = () => F && !F.saved && JSON.stringify(readNote()) !== F.orig;
+  }
+  function readNote() { return { date: $('#n-date').value, tag: segVal('n-tag') || 'general', text: $('#n-text').value }; }
+  function saveNote() {
+    const d = readNote();
+    if (!d.date) return showSaveMsg('Choose a date.');
+    if (!d.text.trim()) return showSaveMsg('Write the note first.');
+    saveRecord('note', F.id, d);
+  }
+
+  function openEdit(id) {
+    const r = Store.records.get(id);
+    if (!r || r.deleted) { toast('That record no longer exists'); return; }
+    if (r.kind === 'entry') openEntry(r);
+    else if (r.kind === 'bleeding') openBleeding(r);
+    else if (r.kind === 'med') openMed(r);
+    else if (r.kind === 'note') openNote(r);
+  }
+  async function deleteCurrent() {
+    if (!F || !F.rec) return;
+    if (!confirm('Delete this record? It will be removed from your history, graphs and exports.')) return;
+    try {
+      await Store.remove(F.id);
+      F.saved = true;
+      closeSheet(true);
+      render();
+      toast('Deleted');
+      Cloud.sync();
+    } catch (e) { showSaveMsg('Could not delete: ' + e.message); }
+  }
+
+  // ---------- Day details ----------
+  function recordsOnDay(date) {
+    const n = C.dayNum(date);
+    return recs().filter(r => {
+      if (r.kind === 'bleeding') return C.dayNum(r.data.startDate) <= n && n <= C.dayNum(r.data.endDate || today());
+      return r.data.date === date;
+    }).sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  }
+  function openDay(date) {
+    const list = recordsOnDay(date);
+    const body = `${list.length ? list.map(itemCard).join('') : `<p class="small" style="margin-top:12px">Nothing logged on this day. That means it's unknown, not symptom-free.</p>`}
+      <div class="stack" style="margin-top:14px">
+        <button class="btn btn-primary btn-block" data-act="log-day" data-date="${date}">Log symptoms for this day</button>
+        <button class="btn btn-block" data-act="none-day" data-date="${date}">Record "no significant symptoms" for this day</button>
+      </div>`;
+    openSheet({ title: fmtDate(date) + (C.dayNum(date) < C.dayNum(today()) - 1 ? '' : ''), body });
+  }
+
+  async function quickNoSymptoms(date) {
+    const d = date || today();
+    const existing = recs().find(r => r.kind === 'entry' && r.data.date === d && r.data.noSymptoms);
+    if (existing) { toast('Already recorded for ' + fmtDate(d).toLowerCase()); return; }
+    const id = uuid();
+    try {
+      await Store.save('entry', id, { date: d, time: d === today() ? nowTime() : '', noSymptoms: true, symptoms: [], duration: '', notes: '', context: {} });
+      closeSheet(true);
+      render();
+      toast('Saved: no significant symptoms ' + (d === today() ? 'today' : 'on ' + C.fmtDay(d)), { label: 'Undo', fn: async () => { await Store.remove(id); render(); Cloud.sync(); } });
+      Cloud.sync();
+    } catch (e) { toast('Not saved: ' + e.message); }
+  }
+
+  // ---------- Graphs ----------
+  function availableKeys() {
+    const { days, labels } = C.buildDays(recs());
+    const keys = new Set();
+    for (const day of days.values()) for (const k of day.sym.keys()) keys.add(k);
+    return { keys, labels };
+  }
+  function rangeBar() {
+    const [from, to] = rangeDates();
+    const p = S.range.preset;
+    return `<div class="range-bar"><div class="seg">${[['30', '30 d'], ['90', '90 d'], ['180', '6 mo'], ['365', '1 yr'], ['custom', 'Custom']].map(([v, l]) => `<button data-act="range" data-v="${v}" aria-pressed="${p === v}">${l}</button>`).join('')}</div>
+      ${p === 'custom' ? `<div class="two" style="margin-top:8px"><input class="field" type="date" data-in="range-from" value="${from}" aria-label="From"><input class="field" type="date" data-in="range-to" value="${to}" aria-label="To"></div>` : ''}
+      <p class="small" style="margin:6px 2px 0">${esc(C.fmtDay(from, true))} – ${esc(C.fmtDay(to, true))} · applies to all three graphs</p></div>`;
+  }
+  function renderGraphs() {
+    const all = recs();
+    const any = all.some(r => r.kind === 'entry');
+    const { keys, labels } = availableKeys();
+    const targets = [['all', 'All symptoms'], ['group:pain', 'Pain (any location)'], ['group:physical', 'Other physical'], ['group:mood', 'Mood & thinking'], ['group:function', 'Daily life']]
+      .concat([...keys].sort().map(k => [k, C.seriesLabel(k, labels)]));
+    return `
+      <div class="screen-head"><div><h1>Graphs</h1></div>${syncPill()}</div>
+      ${rangeBar()}
+      ${!any ? `<div class="banner info">No symptom entries yet. Graphs fill in as you log. Want to see how they work? Add demo data from the Data tab.</div>` : ''}
+      <div class="card" id="card-a">
+        <div class="card-head"><h2>Symptoms over time</h2><button class="link-btn" data-act="pick" data-which="a">Choose</button></div>
+        <div id="chips-a"></div>
+        <div class="chart" id="chart-a" style="margin-top:10px"></div>
+        <div id="legend-a"></div>
+        <div id="picked-a"></div>
+        <details class="plain"><summary>How to read this</summary><p class="small">Each point is the highest score you recorded that day. Lines only join days that are next to each other. A gap means nothing was recorded, which is unknown, not zero. Hollow points are days you logged "no significant symptoms". Shaded areas are logged bleeding. Ticks on the "log" row show days with any symptom entry. Triangles mark your notes and medication changes. Symptoms logged without a score (?) appear in the day details but not on the line.</p></details>
+        <div class="row" style="margin-top:8px"><button class="btn btn-small" data-act="png" data-which="a">Save as image</button></div>
+      </div>
+      <div class="card" id="card-b">
+        <div class="card-head"><h2>Mood and physical symptoms</h2></div>
+        <p class="small" style="margin-top:-4px">Two panels on the same dates, each with its own 0–10 scale. Tap a date to compare. Lines moving together don't show that one causes the other.</p>
+        <div class="card-head" style="margin:10px 0 4px"><h3>Mood</h3><button class="link-btn" data-act="pick" data-which="bMood">Choose</button></div>
+        <div class="chart" id="chart-bm"></div><div id="legend-bm"></div>
+        <div class="card-head" style="margin:12px 0 4px"><h3>Physical</h3><button class="link-btn" data-act="pick" data-which="bPhys">Choose</button></div>
+        <div class="chart" id="chart-bp"></div><div id="legend-bp"></div>
+        <div id="picked-b"></div>
+        <div class="row" style="margin-top:8px"><button class="btn btn-small" data-act="png" data-which="b">Save as image</button></div>
+      </div>
+      <div class="card" id="card-c">
+        <div class="card-head"><h2>Month by month</h2></div>
+        <label class="f" for="c-target" style="margin-top:0">Compare</label>
+        <select class="field" id="c-target" data-in="c-target">${targets.map(([v, l]) => `<option value="${esc(v)}" ${S.cTarget === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+        <div class="chart" id="chart-c" style="margin-top:12px"></div>
+        <div id="months-c"></div>
+        <details class="plain"><summary>How these figures are worked out</summary><p class="small">
+          <b>Days logged</b>: days with at least one symptom entry (including "no significant symptoms"). Bleeding and medication logs don't count. Compare months using this, since fewer logged days isn't the same as fewer symptoms.<br>
+          <b>Average</b>: for each logged day, take the highest score recorded for the chosen symptom(s), then average those daily highs. Several entries on one day count once, using the highest.<br>
+          <b>Symptomatic days</b>: logged days where the chosen symptom(s) were recorded above 0 or without a score.<br>
+          <b>Highest</b>: highest single score that month.<br>
+          <b>Episodes</b>: a run of symptomatic days. Days up to ${C.MERGE_GAP} days apart count as one episode, counted in the month it started.<br>
+          <b>Most recorded</b>: number of days each symptom was recorded.<br>
+          Unlogged days are never counted as zero.</p></details>
+        <div class="row" style="margin-top:8px"><button class="btn btn-small" data-act="png" data-which="c">Save as image</button></div>
+      </div>
+      <button class="btn btn-soft btn-block" data-act="summary">Summary for my doctor (print / PDF)</button>`;
+  }
+
+  const LAST = {};
+  function buildLineSeries(keys, slots, from, to, days, labels) {
+    assignSlots(keys, slots);
+    return keys.map(k => ({ key: k, label: C.seriesLabel(k, labels), color: seriesColor(slots[k]), points: C.seriesPoints(days, k, from, to) }));
+  }
+  function chartExtras(all, from, to) {
+    const bands = all.filter(r => r.kind === 'bleeding').map(r => [C.dayNum(r.data.startDate), C.dayNum(r.data.endDate || today())]);
+    const markers = all.filter(r => (r.kind === 'note') || (r.kind === 'med' && (r.data.event !== 'taken' || r.data.category === 'ec' || r.data.category === 'hormonal')))
+      .map(r => ({ n: C.dayNum(r.data.date), label: r.kind === 'note' ? r.data.text : (MED_EVENT[r.data.event] + ': ' + (r.data.name || MED_CAT[r.data.category])) }));
+    return { bands, markers };
+  }
+  function legendHtml(series) {
+    if (series.length < 2) return series.length ? `<div class="legend"><span><span class="sw" style="background:${series[0].color}"></span>${esc(series[0].label)}</span></div>` : '';
+    return `<div class="legend">${series.map(s => `<span><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('')}</div>`;
+  }
+  function chipsHtml(series, which) {
+    return `<div class="chips">${series.map(s => `<button class="chip" data-act="unpick" data-which="${which}" data-key="${esc(s.key)}" aria-label="Remove ${esc(s.label)}"><span class="sw" style="background:${s.color}"></span>${esc(s.label)} ✕</button>`).join('')}</div>`;
+  }
+  function pickedHtml(n, groups, extras) {
+    if (n === null || n === undefined) return `<p class="small" style="margin-top:6px">Tap the chart to see the values for a day.</p>`;
+    const date = C.dayStr(n);
+    const bleeding = extras.bands.some(([a, b]) => a <= n && n <= b);
+    let rows = '';
+    for (const series of groups) for (const s of series) {
+      const p = s.points.find(x => x.n === n);
+      const v = !p ? '<span class="muted">not recorded</span>' : p.unrated ? 'recorded, no score' : p.implied ? '0 <span class="muted">(no significant symptoms)</span>' : String(p.value);
+      rows += `<div class="picked-row"><span><span class="legend" style="margin:0;display:inline"><span class="sw" style="background:${s.color}"></span></span>${esc(s.label)}</span><b>${v}</b></div>`;
+    }
+    return `<div class="picked"><div class="picked-row"><b>${esc(fmtDate(date))}</b>${bleeding ? '<span>Bleeding logged</span>' : ''}</div>${rows}
+      <button class="link-btn" data-act="day" data-date="${date}">Open entries for this day</button></div>`;
+  }
+  function drawCharts() {
+    if (S.tab !== 'graphs') return;
+    const all = recs();
+    const [from, to] = rangeDates();
+    const { days, labels } = C.buildDays(all);
+    const extras = chartExtras(all, from, to);
+    const logged = [...days.keys()].map(C.dayNum);
+    const col = chartColors();
+    const el = $('#chart-a');
+    if (!el) return;
+    const width = Math.max(260, Math.floor(el.clientWidth));
+    // A
+    const sa = buildLineSeries(S.aKeys, S.aSlots, from, to, days, labels);
+    const hasA = sa.some(s => s.points.length);
+    const svgA = Charts.lineChart({ width, height: 240, from, to, series: sa, bands: extras.bands, markers: extras.markers, logged, selected: S.sel.a, col, title: 'Symptoms over time', emptyText: !sa.length ? 'Choose symptoms to show' : !hasA ? 'Nothing recorded for these in this range' : '' });
+    el.innerHTML = svgA;
+    $('#chips-a').innerHTML = chipsHtml(sa, 'a');
+    $('#picked-a').innerHTML = pickedHtml(S.sel.a, [sa], extras);
+    LAST.a = { svg: svgA, width, height: 240, title: 'symptoms-over-time' };
+    // B
+    const sm = buildLineSeries(S.bMood, S.bMoodSlots, from, to, days, labels);
+    const sp = buildLineSeries(S.bPhys, S.bPhysSlots, from, to, days, labels);
+    const svgM = Charts.lineChart({ width, height: 190, from, to, series: sm, bands: extras.bands, markers: [], logged, selected: S.sel.b, col, title: 'Mood', emptyText: !sm.length ? 'Choose mood symptoms' : !sm.some(s => s.points.length) ? 'Nothing recorded in this range' : '' });
+    const svgP = Charts.lineChart({ width, height: 190, from, to, series: sp, bands: extras.bands, markers: [], logged, selected: S.sel.b, col, title: 'Physical', emptyText: !sp.length ? 'Choose physical symptoms' : !sp.some(s => s.points.length) ? 'Nothing recorded in this range' : '' });
+    $('#chart-bm').innerHTML = svgM; $('#chart-bp').innerHTML = svgP;
+    $('#legend-bm').innerHTML = chipsHtml(sm, 'bMood');
+    $('#legend-bp').innerHTML = chipsHtml(sp, 'bPhys');
+    $('#picked-b').innerHTML = pickedHtml(S.sel.b, [sm, sp], extras);
+    LAST.b = { svg: stackSvg([svgM, svgP], width, 190), width, height: 2 * 190 + 44, title: 'mood-vs-physical' };
+    // C
+    const months = C.monthlySummary(all, { from, to, target: S.cTarget, today: today() }).slice(-18);
+    const items = months.map(m => ({ label: C.MONTHS[Number(m.month.slice(5)) - 1], value: m.avgSeverity, sub: m.loggedDays + '/' + m.daysInPeriod + 'd' }));
+    const svgC = Charts.barChart({ width, height: 200, items, col, title: 'Average daily high by month' });
+    $('#chart-c').innerHTML = svgC + `<p class="small" style="margin:6px 0 0">Bars: average of each logged day's highest score. Below each month: days logged / days in period.</p>`;
+    LAST.c = { svg: svgC, width, height: 200, title: 'monthly-comparison' };
+    $('#months-c').innerHTML = months.slice().reverse().map(m => {
+      const cov = m.daysInPeriod ? Math.round(m.loggedDays / m.daysInPeriod * 100) : 0;
+      const f = v => v === null || v === undefined ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+      return `<div class="month"><div class="month-h"><h3>${esc(C.fmtMonth(m.month))}</h3><span class="small">${m.loggedDays} of ${m.daysInPeriod} days logged</span></div>
+        <div class="cov" aria-hidden="true"><div style="width:${cov}%"></div></div>
+        ${m.loggedDays === 0 ? '<p class="small">No symptom entries this month, so there is no information about it.</p>' : `
+        <div class="stats">
+          <div class="stat"><div class="v">${f(m.avgSeverity)}</div><div class="l">average daily high</div></div>
+          <div class="stat"><div class="v">${m.highest === null ? '–' : m.highest}</div><div class="l">highest score</div></div>
+          <div class="stat"><div class="v">${m.symptomaticDays}</div><div class="l">symptomatic days</div></div>
+          <div class="stat"><div class="v">${m.episodes}</div><div class="l">episodes started</div></div>
+          <div class="stat"><div class="v">${f(m.moodAvg)}</div><div class="l">mood avg daily high</div></div>
+          <div class="stat"><div class="v">${f(m.physAvg)}</div><div class="l">pain & physical avg daily high</div></div>
+        </div>
+        <p class="small" style="margin:8px 0 0">Bleeding: ${m.bleedingDays ? m.bleedingDays + ' day' + (m.bleedingDays === 1 ? '' : 's') + ' logged' : 'none logged'}${m.top.length ? ' · Most recorded: ' + m.top.map(t => esc(t.label) + ' (' + t.days + 'd)').join(', ') : ''}</p>`}</div>`;
+    }).join('') || '<p class="small">No months in this range.</p>';
+    // tap handling
+    bindChartTap('#chart-a', 'a', width, from, to, sa);
+    bindChartTap('#chart-bm', 'b', width, from, to, sm.concat(sp));
+    bindChartTap('#chart-bp', 'b', width, from, to, sm.concat(sp));
+  }
+  function stackSvg(svgs, width, h) {
+    const inner = svgs.map((s, i) => s.replace('<svg ', `<svg y="${i * (h + 24) + 20}" `)).join('');
+    const labelsTxt = ['Mood', 'Physical'].map((t, i) => `<text x="4" y="${i * (h + 24) + 14}" font-size="12" font-weight="600" fill="${css('--text')}">${t}</text>`).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${2 * h + 44}" viewBox="0 0 ${width} ${2 * h + 44}" font-family="-apple-system, system-ui, sans-serif"><rect width="100%" height="100%" fill="${css('--chart-surface')}"/>${labelsTxt}${inner}</svg>`;
+  }
+  function bindChartTap(sel, which, width, from, to, series) {
+    const el = $(sel);
+    if (!el) return;
+    el.onclick = ev => {
+      const rect = el.getBoundingClientRect();
+      const g = Charts.geom(width, 240, from, to);
+      const x = ev.clientX - rect.left;
+      if (x < g.ml - 10 || x > g.ml + g.pw + 10) return;
+      let n = Math.max(g.a, Math.min(g.b, g.n(x)));
+      // snap to nearest day with an observation (within a small window)
+      const obs = new Set(); series.forEach(s => s.points.forEach(p => obs.add(p.n)));
+      const win = Math.max(1, Math.round(g.span / 40));
+      let best = null;
+      for (const o of obs) if (Math.abs(o - n) <= win && (best === null || Math.abs(o - n) < Math.abs(best - n))) best = o;
+      if (best !== null) n = best;
+      S.sel[which] = n;
+      drawCharts();
+    };
+  }
+
+  function openPicker(which) {
+    const { keys, labels } = availableKeys();
+    const cur = which === 'a' ? S.aKeys : which === 'bMood' ? S.bMood : S.bPhys;
+    const max = which === 'a' ? 6 : 4;
+    const allowedGroups = which === 'bMood' ? ['mood'] : which === 'bPhys' ? ['pain', 'physical', 'function'] : C.GROUPS.map(g => g.id);
+    const sel = new Set(cur);
+    const renderBody = () => {
+      let h = `<p class="small">Choose up to ${max}. Symptoms with data in your history are marked with a dot.</p>`;
+      if (which === 'a') h += `<div class="row" style="margin-top:6px"><button class="btn btn-small" data-act="pick-set" data-set="pain">Pain locations</button><button class="btn btn-small" data-act="pick-set" data-set="mood">Mood</button><button class="btn btn-small" data-act="pick-set" data-set="clear">Clear</button></div>`;
+      for (const g of C.GROUPS.filter(g => allowedGroups.includes(g.id))) {
+        const items = g.items.filter(it => !it.custom).map(it => it.id).concat([...keys].filter(k => k.includes(':') && C.seriesGroup(k) === g.id));
+        h += `<div class="group-h">${esc(g.label)}</div><div class="chips">${items.map(k => `<button class="chip" data-act="pick-toggle" data-key="${esc(k)}" aria-pressed="${sel.has(k)}">${keys.has(k) ? '• ' : ''}${esc(C.seriesLabel(k, labels))}</button>`).join('')}</div>`;
+      }
+      h += `<p class="small hidden" id="pick-msg" style="color:var(--danger)">You can show up to ${max} at once. Remove one first.</p>`;
+      return h;
+    };
+    openSheet({ title: 'Choose symptoms', body: renderBody(), footer: `<button class="btn btn-primary btn-block" data-act="pick-done">Show on graph</button>`, onClose: null });
+    sheetState.picker = { which, sel, max, keys, renderBody };
+  }
+  function pickerApply(which, list) {
+    if (which === 'a') S.aKeys = list; else if (which === 'bMood') S.bMood = list; else S.bPhys = list;
+    saveUI();
+  }
+
+  async function savePng(which) {
+    const L = LAST[which];
+    if (!L) return;
+    try {
+      const blob = await Charts.svgToPng(L.svg, L.width, L.height);
+      await deliverFile(blob, `estelle-${L.title}-${today()}.png`);
+    } catch (e) { toast('Could not create the image: ' + e.message); }
+  }
+
+  // ---------- Doctor summary (print) ----------
+  function printSummary() {
+    const all = recs().filter(r => !r.demo || settings().showDemo);
+    const [from, to] = rangeDates();
+    const { days, labels } = C.buildDays(all);
+    const extras = chartExtras(all, from, to);
+    const logged = [...days.keys()].map(C.dayNum);
+    const col = { surface: '#ffffff', grid: '#e6e6e6', axis: '#999999', muted: '#555555', text: '#000000', band: 'rgba(227,73,72,0.12)', logged: '#888888', marker: '#6250d6', bar: '#2a78d6' };
+    const pal = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
+    const mk = (keys, slots) => { assignSlots(keys, slots); return keys.map(k => ({ key: k, label: C.seriesLabel(k, labels), color: pal[slots[k] % 8], points: C.seriesPoints(days, k, from, to) })); };
+    const sa = mk(S.aKeys, Object.assign({}, S.aSlots)), sm = mk(S.bMood, Object.assign({}, S.bMoodSlots)), sp = mk(S.bPhys, Object.assign({}, S.bPhysSlots));
+    const leg = s => s.map(x => `<span style="margin-right:14px"><span style="display:inline-block;width:14px;height:3px;background:${x.color};vertical-align:middle;margin-right:5px"></span>${esc(x.label)}</span>`).join('');
+    const months = C.monthlySummary(all, { from, to, target: 'all', today: today() });
+    const f = v => v === null || v === undefined ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+    const bleeds = all.filter(r => r.kind === 'bleeding' && (r.data.endDate || today()) >= from && r.data.startDate <= to).sort((a, b) => a.data.startDate.localeCompare(b.data.startDate));
+    const meds = all.filter(r => r.kind === 'med' && r.data.date >= from && r.data.date <= to && (r.data.event !== 'taken' || r.data.category === 'ec' || r.data.category === 'hormonal')).sort((a, b) => a.data.date.localeCompare(b.data.date));
+    const notes = all.filter(r => r.kind === 'note' && r.data.date >= from && r.data.date <= to);
+    $('#print').innerHTML = `
+      <h1>Symptom summary: ${esc(settings().name || 'Estelle')}</h1>
+      <p>${esc(C.fmtDay(from, true))} to ${esc(C.fmtDay(to, true))} · created ${esc(C.fmtDay(today(), true))}. Self-recorded symptom diary. Scores are 0–10 (0 = none, 10 = worst). Unlogged days are unknown, not symptom-free. Not a diagnostic tool.</p>
+      ${hasDemo() && settings().showDemo ? '<p><b>Includes demonstration data.</b></p>' : ''}
+      <div class="pb"><h2>Symptoms over time</h2>${Charts.lineChart({ width: 680, height: 260, from, to, series: sa, bands: extras.bands, markers: extras.markers, logged, col })}<p>${leg(sa)}</p><p>Points: highest score each logged day. Shaded: bleeding. Bottom row: days with any entry.</p></div>
+      <div class="pb"><h2>Mood</h2>${Charts.lineChart({ width: 680, height: 190, from, to, series: sm, bands: extras.bands, logged, col })}<p>${leg(sm)}</p></div>
+      <div class="pb"><h2>Physical</h2>${Charts.lineChart({ width: 680, height: 190, from, to, series: sp, bands: extras.bands, logged, col })}<p>${leg(sp)}</p></div>
+      <div class="pb"><h2>Month by month (all symptoms)</h2><table><tr><th>Month</th><th>Days logged</th><th>Avg daily high</th><th>Highest</th><th>Symptomatic days</th><th>Episodes</th><th>Bleeding days</th><th>Most recorded</th></tr>
+      ${months.map(m => `<tr><td>${esc(C.fmtMonth(m.month))}</td><td>${m.loggedDays}/${m.daysInPeriod}</td><td>${f(m.avgSeverity)}</td><td>${m.highest === null ? '–' : m.highest}</td><td>${m.symptomaticDays}</td><td>${m.episodes}</td><td>${m.bleedingDays}</td><td>${m.top.map(t => esc(t.label) + ' (' + t.days + ')').join(', ')}</td></tr>`).join('')}</table></div>
+      <div class="pb"><h2>Bleeding</h2>${bleeds.length ? '<ul>' + bleeds.map(r => `<li>${esc(C.fmtDay(r.data.startDate, true))} – ${r.data.endDate ? esc(C.fmtDay(r.data.endDate, true)) : 'ongoing'}: ${esc(r.data.type || 'type not recorded')}${r.data.pain !== '' && r.data.pain !== null && r.data.pain !== undefined ? ', pain ' + esc(r.data.pain) : ''}${r.data.notes ? ' – ' + esc(r.data.notes) : ''}</li>`).join('') + '</ul>' : '<p>None logged in this period.</p>'}</div>
+      <div class="pb"><h2>Medication changes and events</h2>${meds.length ? '<ul>' + meds.map(r => `<li>${esc(C.fmtDay(r.data.date, true))}: ${esc(MED_EVENT[r.data.event] || 'Taken')} – ${esc(r.data.name || MED_CAT[r.data.category])}${r.data.dose ? ' ' + esc(r.data.dose) : ''}${r.data.sideEffects ? ' (side effects: ' + esc(r.data.sideEffects) + ')' : ''}</li>`).join('') + '</ul>' : '<p>None logged in this period.</p>'}
+      <p>Current dienogest dose recorded in the app: ${esc(settings().dienogestDose || 'not set')}</p></div>
+      ${notes.length ? `<div class="pb"><h2>Notes</h2><ul>${notes.map(r => `<li>${esc(C.fmtDay(r.data.date, true))}: ${esc(r.data.text)}</li>`).join('')}</ul></div>` : ''}`;
+    setTimeout(() => window.print(), 100);
+  }
+
+  // ---------- Patterns ----------
+  function renderPatterns() {
+    const all = recs();
+    const t = today();
+    const first = all.filter(r => r.kind === 'entry').map(r => r.data.date).sort()[0] || t;
+    const from = S.pRange === '180' ? C.addDays(t, -182) : S.pRange === '365' ? C.addDays(t, -364) : first;
+    const res = C.patterns(all, { from, to: t, today: t });
+    const notes = all.filter(r => r.kind === 'note').sort((a, b) => b.data.date.localeCompare(a.data.date));
+    return `
+      <div class="screen-head"><div><h1>Patterns to explore</h1></div>${syncPill()}</div>
+      <div class="seg" style="margin-bottom:12px">${[['180', '6 months'], ['365', '1 year'], ['all', 'All time']].map(([v, l]) => `<button data-act="prange" data-v="${v}" aria-pressed="${S.pRange === v}">${l}</button>`).join('')}</div>
+      <div class="banner info"><span>These are things that <b>appear</b> in what you've recorded, worked out with simple counts on this phone. They aren't medical conclusions or diagnoses, and they don't show that one thing causes another. They could be worth raising with your doctor.</span></div>
+      ${res.insights.length ? res.insights.map((p, i) => `<div class="card insight">
+          <div class="type">${esc(p.type)}</div><h2 style="margin:4px 0 6px">${esc(p.title)}</h2>
+          <p style="margin:0">${esc(p.text)}</p>
+          <div class="meta"><b>Dates:</b> ${esc(C.fmtDay(p.range[0], true))} – ${esc(C.fmtDay(p.range[1], true))}<br><b>Based on:</b> ${esc(p.basis)}</div>
+          <div class="limits"><b>Limits:</b> ${esc(p.limits)}</div>
+          ${p.days.length ? `<details class="plain"><summary>Show the days (${p.days.length})</summary><p class="small">${p.days.map(d => /^\d{4}-\d\d-\d\d$/.test(d) ? `<button class="link-btn" data-act="day" data-date="${d}">${esc(C.fmtDay(d, true))}</button>` : esc(d.replace(/(\d{4}-\d\d-\d\d)/g, m => C.fmtDay(m, true)))).join(', ')}</p></details>` : ''}
+        </div>`).join('') : `<div class="card"><h2>Nothing to show yet</h2><p class="small">Patterns only appear when there's enough data to support them: for example at least 5 shared days for symptoms that occur together, 4 episodes for a recurring pattern, or 3 months with 8+ scored days for changes over time. You have ${res.loggedDays} logged day${res.loggedDays === 1 ? '' : 's'} in this range.</p></div>`}
+      <div class="card">
+        <div class="card-head"><h2>Your notes on patterns</h2><button class="link-btn" data-act="note">Add</button></div>
+        <p class="small" style="margin-top:-4px">Noticed something, like a suspected cycle? Note it here. It's kept as your observation and not treated as a fact by the app. Nothing here assumes a menstrual cycle, ovulation or PMS.</p>
+        ${notes.length ? notes.map(itemCard).join('') : ''}
+      </div>`;
+  }
+
+  // ---------- Data & Backup ----------
+  function renderData() {
+    const st = settings();
+    const n = Store.list().filter(r => !r.deleted && !r.demo).length;
+    const demoN = Store.list().filter(r => r.demo).length;
+    const s = Cloud.session();
+    const cfg = Cloud.cfg() || {};
+    const pending = Store.list().filter(r => r.dirty && !r.demo).length;
+    let cloud;
+    if (!Cloud.configured()) {
+      cloud = `<p class="small">Not set up. Entries are only on this phone, so if Safari's website data is cleared or the phone is lost, they're gone unless you've saved a backup. The setup guide that came with the app explains the free cloud set-up (about 10 minutes).</p>
+        <label class="f" for="cl-url">Supabase Project URL</label><input class="field" id="cl-url" placeholder="https://xxxx.supabase.co" value="${esc(cfg.url)}" autocapitalize="off" autocorrect="off">
+        <label class="f" for="cl-key">Publishable (anon) key</label><input class="field" id="cl-key" placeholder="sb_publishable_… or eyJ…" value="${esc(cfg.key)}" autocapitalize="off" autocorrect="off">
+        <button class="btn btn-primary btn-block" style="margin-top:12px" data-act="cloud-save">Connect</button>`;
+    } else if (!s) {
+      cloud = `<p class="small">Connected to <b>${esc(cfg.url.replace(/^https?:\/\//, ''))}</b>. Sign in to sync. ${pending ? pending + ' change(s) are waiting on this phone.' : ''}</p>
+        <label class="f" for="cl-email">Email</label><input class="field" id="cl-email" type="email" autocomplete="username" autocapitalize="off">
+        <label class="f" for="cl-pw">Password</label><input class="field" id="cl-pw" type="password" autocomplete="current-password">
+        <div class="row" style="margin-top:12px"><button class="btn btn-primary" data-act="cloud-signin">Sign in</button><button class="btn" data-act="cloud-signup">Create account</button></div>
+        <button class="link-btn" data-act="cloud-reset">Change project URL or key</button>`;
+    } else {
+      cloud = `<p class="small">Signed in as <b>${esc(s.user.email || '')}</b>. ${esc(Cloud.status.message)}${Store.meta.lastSync ? ' Last synced ' + esc(fmtStamp(Store.meta.lastSync)) + '.' : ''}</p>
+        <div class="row"><button class="btn btn-primary" data-act="cloud-sync">Sync now</button><button class="btn" data-act="cloud-signout">Sign out</button></div>`;
+    }
+    return `
+      <div class="screen-head"><div><h1>Data & backup</h1><p class="small">${n} record${n === 1 ? '' : 's'} on this phone</p></div>${syncPill()}</div>
+      <div class="card"><h2>Cloud backup &amp; sync</h2>${cloud}</div>
+      <div class="card"><h2>Export &amp; backup files</h2>
+        <p class="small">Save these to Files, iCloud Drive or email. A full backup can be restored here at any time.${Store.meta.lastBackup ? ' Last backup: ' + esc(fmtStamp(Store.meta.lastBackup)) + '.' : ''}</p>
+        <div class="stack">
+          <button class="btn btn-block btn-soft" data-act="export-json">Full backup (JSON)</button>
+          <button class="btn btn-block" data-act="export-csv-sym">Symptoms spreadsheet (CSV, opens in Excel/Numbers)</button>
+          <button class="btn btn-block" data-act="export-csv-other">Bleeding, medication &amp; notes (CSV)</button>
+          <label class="check"><input type="checkbox" id="exp-demo"> Include demo data in exports</label>
+        </div>
+        <h3 style="margin-top:16px">Restore from a backup</h3>
+        <p class="small">Adds records from a backup file. Nothing on this phone is deleted, and a newer version of a record is never replaced by an older one.</p>
+        <input type="file" id="restore-file" accept="application/json,.json" class="hidden">
+        <button class="btn btn-block" data-act="restore">Choose backup file…</button>
+        <p class="small" style="margin-top:12px">Graphs can be saved as images on the Graphs tab, which also has a printable summary (save as PDF from the print screen).</p>
+      </div>
+      <div class="card"><h2>Settings</h2>
+        <label class="f" for="set-name" style="margin-top:0">Your name</label><input class="field" id="set-name" value="${esc(st.name)}">
+        <label class="f" for="set-dose">Prescribed dienogest dose</label><input class="field" id="set-dose" value="${esc(st.dienogestDose)}" placeholder="e.g. 2 mg daily">
+        <button class="btn btn-block" style="margin-top:12px" data-act="save-settings">Save settings</button>
+      </div>
+      <div class="card"><h2>Demonstration data</h2>
+        <p class="small">Clearly labelled sample entries for trying out the graphs. They're never synced to the cloud, are marked <span class="demo-tag">DEMO</span> everywhere, and can be removed in one tap.</p>
+        ${demoN ? `<p class="small">${demoN} demo records stored.</p>
+          <label class="check"><input type="checkbox" data-in="show-demo" ${st.showDemo ? 'checked' : ''}> Show demo data in graphs and history</label>
+          <button class="btn btn-danger btn-block" data-act="demo-remove">Remove all demo data</button>` : `<button class="btn btn-block" data-act="demo-add">Add demo data</button>`}
+      </div>
+      <div class="card"><h2>Privacy: where your data lives</h2>
+        <p class="small"><b>On this phone:</b> every entry is saved in this app's private storage on the iPhone first. Only this app, at this web address, can read it.<br>
+        <b>In the cloud (if set up):</b> a copy goes to your own Supabase database over an encrypted connection (HTTPS). Supabase stores it encrypted at rest. Each person can only read their own rows: this is enforced by the database itself, not just the app, and needs your email and password to sign in.<br>
+        <b>Nowhere else:</b> no analytics, no advertising, no AI services, no tracking. The app makes no other network requests.<br>
+        This app is for personal tracking and for discussions with healthcare professionals. It's not a diagnostic tool.</p>
+      </div>
+      <div class="card"><h2>Delete everything</h2>
+        <p class="small">Permanently deletes every record from this phone${Cloud.signedIn() ? ' and from your cloud database' : ''}. Save a backup first if you might want it later.</p>
+        <button class="btn btn-danger btn-block" data-act="wipe">Delete all my data…</button>
+      </div>
+      <p class="small" style="text-align:center">Made for ${esc(st.name || 'Estelle')} · storage ${Store.persisted ? 'protected from automatic clearing' : 'standard'}</p>`;
+  }
+
+  // ---------- Export / import ----------
+  async function deliverFile(blob, filename) {
+    let file = null;
+    try { file = new File([blob], filename, { type: blob.type }); } catch (e) { /* older browsers */ }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: filename }); return 'shared'; }
+      catch (e) { if (e.name === 'AbortError') return 'cancelled'; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    return 'downloaded';
+  }
+  function exportRecords() {
+    const inc = $('#exp-demo') && $('#exp-demo').checked;
+    return Store.list().filter(r => !r.deleted && (inc || !r.demo)).sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  }
+  function backupJson(list) {
+    return JSON.stringify({ app: 'estelle-endo-tracker', version: 1, exportedAt: new Date().toISOString(), count: list.length, records: list.map(r => ({ id: r.id, kind: r.kind, data: r.data, createdAt: r.createdAt, updatedAt: r.updatedAt, demo: !!r.demo })) }, null, 1);
+  }
+  const csvCell = v => { const s = v === null || v === undefined ? '' : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  function symptomsCsv(list) {
+    const ctxKeys = ['stress', 'sleepHours', 'sleepQuality', 'exercise', 'exerciseNote', 'movement', 'bowel', 'appetite', 'food', 'illness', 'sex', 'lifeEvents', 'other'];
+    const rows = [['date', 'time', 'entry_id', 'group', 'symptom', 'description', 'severity_0_10', 'no_significant_symptoms', 'duration', 'notes'].concat(ctxKeys.map(k => 'context_' + k)).concat(['demo', 'last_saved'])];
+    for (const r of list) if (r.kind === 'entry') {
+      const d = r.data, ctx = d.context || {};
+      const base = s => [d.date, d.time, r.id, s ? (C.GROUP[C.ITEM[s.id] ? C.ITEM[s.id].group : 'physical'] || {}).label : '', s ? C.ITEM[s.id] ? C.ITEM[s.id].label : s.id : '', s ? s.label || '' : '', s ? (s.severity === null || s.severity === undefined ? 'not rated' : s.severity) : '', d.noSymptoms ? 'yes' : 'no', d.duration, d.notes].concat(ctxKeys.map(k => ctx[k])).concat([r.demo ? 'DEMO' : '', r.updatedAt]);
+      if (d.noSymptoms || !(d.symptoms || []).length) rows.push(base(null));
+      else d.symptoms.forEach(s => rows.push(base(s)));
+    }
+    return csv(rows);
+  }
+  function otherCsv(list) {
+    const rows = [['kind', 'date_or_start', 'end_date', 'time', 'type_or_category', 'event', 'name', 'dose', 'pain_0_10', 'symptoms', 'effect', 'side_effects', 'notes', 'record_id', 'demo', 'last_saved']];
+    for (const r of list) {
+      const d = r.data;
+      if (r.kind === 'bleeding') rows.push(['bleeding', d.startDate, d.endDate || 'ongoing', '', d.type, '', '', '', d.pain, d.symptoms, '', '', d.notes, r.id, r.demo ? 'DEMO' : '', r.updatedAt]);
+      if (r.kind === 'med') rows.push(['medication', d.date, '', d.time, MED_CAT[d.category], MED_EVENT[d.event], d.name, d.dose, '', '', d.effect, d.sideEffects, d.notes, r.id, r.demo ? 'DEMO' : '', r.updatedAt]);
+      if (r.kind === 'note') rows.push(['note', d.date, '', '', d.tag === 'pattern' ? 'suspected pattern' : 'note', '', '', '', '', '', '', '', d.text, r.id, r.demo ? 'DEMO' : '', r.updatedAt]);
+    }
+    return csv(rows);
+  }
+  async function doExport(kind) {
+    const list = exportRecords();
+    let blob, name;
+    if (kind === 'json') { blob = new Blob([backupJson(list)], { type: 'application/json' }); name = `estelle-tracker-backup-${today()}.json`; }
+    if (kind === 'sym') { blob = new Blob([symptomsCsv(list)], { type: 'text/csv' }); name = `estelle-symptoms-${today()}.csv`; }
+    if (kind === 'other') { blob = new Blob([otherCsv(list)], { type: 'text/csv' }); name = `estelle-bleeding-medication-notes-${today()}.csv`; }
+    const res = await deliverFile(blob, name);
+    if (kind === 'json' && res !== 'cancelled') { await Store.setMeta('lastBackup', new Date().toISOString()); render(); }
+    if (res !== 'cancelled') toast(kind === 'json' ? 'Backup created (' + list.length + ' records)' : 'Export created');
+  }
+  async function doRestore(file) {
+    let parsed;
+    try { parsed = JSON.parse(await file.text()); } catch (e) { toast("That file isn't a valid backup."); return; }
+    if (!parsed || parsed.app !== 'estelle-endo-tracker' || !Array.isArray(parsed.records)) { toast("That file isn't a backup from this app."); return; }
+    const res = C.mergeImport(Store.records, parsed.records);
+    if (!confirm(`Restore from backup made ${parsed.exportedAt ? fmtStamp(parsed.exportedAt) : 'at an unknown time'}?\n\n${res.added} new record(s) will be added, ${res.updated} will be updated with a newer version, ${res.skipped} are already up to date. Nothing will be deleted.`)) return;
+    try { await Store.putMany(res.puts); render(); toast(`Restored: ${res.added} added, ${res.updated} updated`); Cloud.sync(); }
+    catch (e) { toast('Restore failed: ' + e.message); }
+  }
+
+  // ---------- Demo data ----------
+  async function addDemo() {
+    const t = today();
+    const out = [];
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const now = new Date().toISOString();
+    const mkRec = (kind, data) => ({ id: uuid(), kind, data, createdAt: now, updatedAt: now, deleted: false, demo: true, dirty: false });
+    for (let i = 150; i >= 0; i--) {
+      const d = C.addDays(t, -i);
+      const phase = (150 - i) % 28;
+      const flare = phase >= 20 && phase <= 25;
+      if (rnd() > (flare ? 0.85 : 0.45)) continue;
+      if (!flare && rnd() < 0.35) { out.push(mkRec('entry', { date: d, time: '21:00', noSymptoms: true, symptoms: [], duration: '', notes: '[DEMO] felt okay', context: {} })); continue; }
+      const base = flare ? 5 : 2;
+      const sev = () => Math.max(0, Math.min(10, Math.round(base + rnd() * 4 - 1)));
+      const sy = [{ id: 'pelvic', severity: sev() }];
+      if (rnd() < 0.6) sy.push({ id: 'ovary_r', severity: sev() });
+      if (rnd() < 0.5) sy.push({ id: 'bloating', severity: sev() });
+      if (flare || rnd() < 0.3) sy.push({ id: 'low_mood', severity: Math.max(0, sev() - 1) });
+      if (rnd() < 0.3) sy.push({ id: 'fatigue', severity: sev() });
+      if (rnd() < 0.15) sy.push({ id: 'nausea', severity: null });
+      out.push(mkRec('entry', { date: d, time: '18:30', noSymptoms: false, symptoms: sy, duration: flare ? 'All day' : 'A few hours', notes: '[DEMO] sample entry', context: rnd() < 0.5 ? { stress: Math.round(rnd() * 10), sleepHours: Math.round((5 + rnd() * 4) * 2) / 2 } : {} }));
+      if (flare && rnd() < 0.3) out.push(mkRec('entry', { date: d, time: '08:00', noSymptoms: false, symptoms: [{ id: 'lower_back', severity: sev() }], duration: '', notes: '[DEMO] morning', context: {} }));
+    }
+    out.push(mkRec('bleeding', { startDate: C.addDays(t, -40), endDate: C.addDays(t, -37), type: 'spotting', pain: 4, symptoms: 'cramping', notes: '[DEMO] unexpected spotting' }));
+    out.push(mkRec('med', { date: C.addDays(t, -60), time: '', category: 'dienogest', event: 'missed', name: 'Dienogest', dose: '', effect: '', sideEffects: '', notes: '[DEMO]' }));
+    out.push(mkRec('med', { date: C.addDays(t, -10), time: '14:00', category: 'pain', event: 'taken', name: 'Ibuprofen', dose: '400 mg', effect: 'eased after an hour', sideEffects: '', notes: '[DEMO]' }));
+    out.push(mkRec('note', { date: C.addDays(t, -20), tag: 'pattern', text: '[DEMO] Pain seems to flare roughly monthly' }));
+    try { await Store.putMany(out); await Store.setMeta('settings', Object.assign(settings(), { showDemo: true })); render(); toast(out.length + ' demo records added'); }
+    catch (e) { toast('Could not add demo data: ' + e.message); }
+  }
+  async function removeDemo() {
+    const ids = Store.list().filter(r => r.demo).map(r => r.id);
+    if (!confirm('Remove all ' + ids.length + ' demo records? Your real entries are not affected.')) return;
+    try { await Store.hardDelete(ids); render(); toast('Demo data removed'); } catch (e) { toast('Could not remove demo data: ' + e.message); }
+  }
+
+  // ---------- Wipe ----------
+  function openWipe() {
+    const body = `<p>This permanently deletes <b>every record</b> on this phone${Cloud.signedIn() ? ' and in your cloud database' : ''}. It can't be undone.</p>
+      <p class="small">To also delete the cloud login itself, delete the user (or the whole project) in the Supabase dashboard afterwards.</p>
+      <label class="f" for="wipe-confirm">Type DELETE to confirm</label><input class="field" id="wipe-confirm" autocapitalize="characters" autocomplete="off">`;
+    openSheet({ title: 'Delete all data', body, footer: `<div class="save-msg hidden" id="save-msg" role="alert"></div><button class="btn btn-danger btn-block" data-act="wipe-go">Delete everything</button>` });
+  }
+  async function doWipe() {
+    if ($('#wipe-confirm').value.trim().toUpperCase() !== 'DELETE') return showSaveMsg('Type DELETE to confirm.');
+    try {
+      if (Cloud.signedIn()) await Cloud.deleteAllRemote();
+      await Store.clearAll();
+      await Store.setMeta('lastSync', null);
+      closeSheet(true); render(); toast('All data deleted');
+    } catch (e) { showSaveMsg('Not finished: ' + e.message + '. Nothing on this phone was deleted.'); }
+  }
+
+  // ---------- events ----------
+  const actions = {
+    tab: el => { if (closeSheet()) { S.tab = el.dataset.tab; saveUI(); window.scrollTo(0, 0); render(); } },
+    log: () => openEntry(null),
+    'log-day': el => { closeSheet(true); openEntry(null, el.dataset.date); },
+    'none-day': el => quickNoSymptoms(el.dataset.date),
+    'no-symptoms': () => quickNoSymptoms(today()),
+    bleeding: () => openBleeding(null),
+    med: () => openMed(null),
+    note: () => openNote(null),
+    edit: el => { closeSheet(true); openEdit(el.dataset.id); },
+    day: el => openDay(el.dataset.date),
+    'sheet-close': () => closeSheet(),
+    sym: el => {
+      const id = el.dataset.id;
+      const i = F.d.symptoms.findIndex(s => s.id === id);
+      if (i >= 0) F.d.symptoms.splice(i, 1); else F.d.symptoms.push({ id, severity: undefined });
+      const g = C.ITEM[id].group;
+      $('#grp-' + g).innerHTML = groupBlock(C.GROUP[g]);
+      const u = $('#usual'); if (u) u.innerHTML = usualKeys().map(chipFor).join('');
+      if (i < 0) { const row = $(`[data-row="${id}"]`); if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' }); }
+    },
+    sev: el => {
+      const name = el.dataset.name, v = el.dataset.v;
+      $$(`[data-sev="${name}"] button`).forEach(b => b.setAttribute('aria-pressed', String(b === el)));
+      if (name.startsWith('sev-')) { const s = F.d.symptoms.find(x => x.id === name.slice(4)); if (s) s.severity = v === '?' ? null : Number(v); }
+    },
+    seg: el => {
+      const name = el.dataset.name;
+      const was = el.getAttribute('aria-pressed') === 'true';
+      $$(`[data-seg="${name}"] button`).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      if (!was) el.setAttribute('aria-pressed', 'true');
+      if (name === 'm-event') { const l = $('#m-dose-l'); if (l) l.textContent = el.dataset.v === 'change' && !was ? 'New dose' : 'Dose'; }
+    },
+    medcat: el => {
+      $$('[data-act="medcat"]').forEach(b => b.setAttribute('aria-pressed', String(b === el)));
+      if (el.dataset.v === 'dienogest') { if (!$('#m-name').value) $('#m-name').value = 'Dienogest'; if (!$('#m-dose').value) $('#m-dose').value = settings().dienogestDose || ''; }
+    },
+    dur: el => { $('#e-duration').value = el.dataset.v; },
+    'save-entry': saveEntry, 'save-bleeding': saveBleeding, 'save-med': saveMed, 'save-note': saveNote,
+    delete: deleteCurrent,
+    'hist-kind': el => { S.hist.kind = el.dataset.kind; S.histLimit = 60; saveUI(); render(); },
+    'hist-order': () => { S.hist.order = S.hist.order === 'desc' ? 'asc' : 'desc'; saveUI(); render(); },
+    'hist-more': () => { S.histLimit += 100; render(); },
+    range: el => { S.range.preset = el.dataset.v; if (el.dataset.v === 'custom' && !S.range.from) { const [f, t] = [C.addDays(today(), -89), today()]; S.range.from = f; S.range.to = t; } saveUI(); render(); },
+    prange: el => { S.pRange = el.dataset.v; saveUI(); render(); },
+    pick: el => openPicker(el.dataset.which),
+    unpick: el => {
+      const w = el.dataset.which, k = el.dataset.key;
+      const list = (w === 'a' ? S.aKeys : w === 'bMood' ? S.bMood : S.bPhys).filter(x => x !== k);
+      pickerApply(w, list); drawCharts();
+    },
+    'pick-toggle': el => {
+      const P = sheetState && sheetState.picker; if (!P) return;
+      const k = el.dataset.key;
+      if (P.sel.has(k)) P.sel.delete(k);
+      else if (P.sel.size >= P.max) { $('#pick-msg').classList.remove('hidden'); return; }
+      else P.sel.add(k);
+      el.setAttribute('aria-pressed', String(P.sel.has(k)));
+      $('#pick-msg').classList.add('hidden');
+    },
+    'pick-set': el => {
+      const P = sheetState && sheetState.picker; if (!P) return;
+      P.sel.clear();
+      if (el.dataset.set !== 'clear') {
+        const grp = el.dataset.set;
+        const withData = C.GROUP[grp].items.filter(it => !it.custom && P.keys.has(it.id)).map(it => it.id);
+        const fill = withData.length ? withData : C.GROUP[grp].items.filter(it => !it.custom).map(it => it.id);
+        fill.slice(0, P.max).forEach(k => P.sel.add(k));
+      }
+      $('#sheet-b').innerHTML = P.renderBody();
+    },
+    'pick-done': () => {
+      const P = sheetState && sheetState.picker; if (!P) return;
+      const cur = P.which === 'a' ? S.aKeys : P.which === 'bMood' ? S.bMood : S.bPhys;
+      const list = cur.filter(k => P.sel.has(k)).concat([...P.sel].filter(k => !cur.includes(k)));
+      pickerApply(P.which, list);
+      closeSheet(true); drawCharts();
+    },
+    png: el => savePng(el.dataset.which),
+    summary: printSummary,
+    'export-json': () => doExport('json'), 'export-csv-sym': () => doExport('sym'), 'export-csv-other': () => doExport('other'),
+    restore: () => $('#restore-file').click(),
+    'demo-add': addDemo, 'demo-remove': removeDemo,
+    'save-settings': async () => {
+      try { await Store.setMeta('settings', Object.assign(settings(), { name: $('#set-name').value.trim() || 'Estelle', dienogestDose: $('#set-dose').value.trim() })); toast('Settings saved'); render(); }
+      catch (e) { toast('Not saved: ' + e.message); }
+    },
+    'cloud-save': async () => {
+      let url = $('#cl-url').value.trim(), key = $('#cl-key').value.trim();
+      if (!/^https:\/\/[^\s/]+/.test(url)) { toast('The Project URL should start with https://'); return; }
+      if (key.length < 20) { toast('That key looks too short. Copy the publishable (anon) key.'); return; }
+      if (/^sb_secret_/.test(key) || /service_role/.test(atobSafe(key))) { toast("That's a secret key. Use the publishable (anon) key instead. Never put the secret key in an app."); return; }
+      await Store.setMeta('cloud', { url: url.replace(/\/+$/, ''), key });
+      render(); Cloud.sync();
+    },
+    'cloud-reset': async () => { if (confirm('Disconnect from this cloud project? Entries stay on this phone.')) { await Store.setMeta('cloud', null); await Store.setMeta('session', null); Cloud.set('local', 'Saved on this phone only.'); render(); } },
+    'cloud-signin': async el => {
+      const email = $('#cl-email').value.trim(), pw = $('#cl-pw').value;
+      if (!email || !pw) { toast('Enter your email and password'); return; }
+      el.disabled = true;
+      try { await Cloud.signIn(email, pw); toast('Signed in. Syncing…'); render(); await Cloud.sync(); render(); }
+      catch (e) { toast('Sign-in failed: ' + e.message); el.disabled = false; }
+    },
+    'cloud-signup': async el => {
+      const email = $('#cl-email').value.trim(), pw = $('#cl-pw').value;
+      if (!email || pw.length < 8) { toast('Enter your email and a password of at least 8 characters'); return; }
+      el.disabled = true;
+      try {
+        const r = await Cloud.signUp(email, pw);
+        if (r.session) { toast('Account created. Syncing…'); render(); await Cloud.sync(); render(); }
+        else { alert('Account created. Check your email and tap the confirmation link, then come back here and tap "Sign in".'); el.disabled = false; }
+      } catch (e) { toast('Could not create account: ' + e.message); el.disabled = false; }
+    },
+    'cloud-sync': async () => { await Cloud.sync(); render(); },
+    'cloud-signout': async () => { if (confirm('Sign out of the cloud? Entries stay on this phone; new ones will sync when you sign in again.')) { await Cloud.signOut(); render(); } },
+    wipe: openWipe, 'wipe-go': doWipe
+  };
+  function atobSafe(k) { try { return atob(k.split('.')[1] || ''); } catch (e) { return ''; } }
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const fn = actions[el.dataset.act];
+    if (fn) { e.preventDefault(); fn(el); }
+  });
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (el.id === 'e-none') return;
+    const k = el.dataset && el.dataset.in;
+    if (k === 'hist-q') { S.hist.q = el.value; S.histLimit = 60; saveUI(); const pos = el.selectionStart; render(); const n = $('[data-in="hist-q"]'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) { /* search inputs */ } }
+    if (k === 'sym-label') { const s = F.d.symptoms.find(x => x.id === el.dataset.id); if (s) s.label = el.value; }
+  });
+  document.addEventListener('change', async e => {
+    const el = e.target;
+    if (el.id === 'e-none') $('#sym-area').classList.toggle('hidden', el.checked);
+    if (el.id === 'b-ongoing') { $('#b-end').disabled = el.checked; if (!el.checked && !$('#b-end').value) $('#b-end').value = today(); }
+    if (el.id === 'restore-file' && el.files[0]) { await doRestore(el.files[0]); el.value = ''; }
+    const k = el.dataset && el.dataset.in;
+    if (k === 'range-from' || k === 'range-to') { S.range[k === 'range-from' ? 'from' : 'to'] = el.value; saveUI(); render(); }
+    if (k === 'c-target') { S.cTarget = el.value; saveUI(); drawCharts(); }
+    if (k === 'show-demo') { await Store.setMeta('settings', Object.assign(settings(), { showDemo: el.checked })); render(); }
+  });
+  let rz;
+  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawCharts, 150); });
+  window.addEventListener('online', () => Cloud.sync());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Cloud.sync(); });
+  setInterval(() => { if (Store.list().some(r => r.dirty && !r.demo)) Cloud.sync(); }, 120000);
+  Cloud.onChange(() => { if (!sheetState) { const p = $('.screen-head .pill'); if (p) p.outerHTML = syncPill(); } });
+
+  // ---------- start ----------
+  async function start() {
+    try { await Store.init(); }
+    catch (e) { Store.failed = e.message || 'unknown error'; }
+    if (!Cloud.configured()) Cloud.set('local', 'Saved on this phone only. Cloud backup is not set up.');
+    render();
+    Cloud.sync().then(() => { if (!sheetState) render(); });
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  window.__app = { S, render, Store, Cloud, actions, symptomsCsv, otherCsv, backupJson };
+  start();
+})();
+</script>
+</body>
+</html>
